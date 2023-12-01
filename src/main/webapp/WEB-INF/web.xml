@@ -1,0 +1,20 @@
+<web-app>
+    <display-name>Job Board</display-name>
+
+     Define the welcome file list
+    <welcome-file-list>
+        <welcome-file>register.jsp</welcome-file>
+    </welcome-file-list>
+
+<!--     Define the RegistrationServlet-->
+<!--    <servlet>-->
+<!--        <servlet-name>RegistrationServlet</servlet-name>-->
+<!--        <servlet-class>com.aswinayyappadas.servlets.RegistrationServlet</servlet-class>-->
+<!--    </servlet>-->
+
+<!--     Map the RegistrationServlet to a URL pattern-->
+<!--    <servlet-mapping>-->
+<!--        <servlet-name>RegistrationServlet</servlet-name>-->
+<!--        <url-pattern>/JobBoard/register</url-pattern>-->
+<!--    </servlet-mapping>-->
+</web-app>
