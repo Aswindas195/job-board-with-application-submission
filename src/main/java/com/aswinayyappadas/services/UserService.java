@@ -1,12 +1,12 @@
 package com.aswinayyappadas.services;
 
-import com.aswinayyappadas.exceptions.JobDeleteException;
-import com.aswinayyappadas.exceptions.JobPostException;
+
+import com.aswinayyappadas.exceptions.*;
+import com.aswinayyappadas.util.application.ApplicationUtils;
+import org.json.JSONArray;
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.aswinayyappadas.dbconnection.DbConnector;
-import com.aswinayyappadas.exceptions.UserRegistrationException;
-import com.aswinayyappadas.exceptions.UserRetrievalException;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -146,9 +146,12 @@ public class UserService {
             throw new UserRetrievalException("Error retrieving user by ID.", e);
         }
     }
-    public void deleteJob(int employerId, int jobId) throws JobDeleteException {
-        // Implement your job deletion logic here
+    public void deleteJobPost(int employerId, int jobId) throws JobDeleteException {
         try (Connection connection = DbConnector.getConnection()) {
+            // Delete corresponding entries from the applications table
+            deleteApplicationsForJob(connection, jobId);
+
+            // Delete the job from the joblistings table
             String sql = "DELETE FROM joblistings WHERE employerid = ? AND jobid = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -166,6 +169,51 @@ public class UserService {
         } catch (SQLException e) {
             logSQLExceptionDetails(e);
             throw new JobDeleteException("Error deleting job.", e);
+        }
+    }
+
+    private void deleteApplicationsForJob(Connection connection, int jobId) throws SQLException {
+        String deleteApplicationsSql = "DELETE FROM applications WHERE jobid = ?";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(deleteApplicationsSql)) {
+            preparedStatement.setInt(1, jobId);
+            preparedStatement.executeUpdate();
+        }
+    }
+    // New method to retrieve all job posts by a specific employer
+    public JSONArray getJobPostsByEmployer(int employerId) throws JobRetrievalException {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT jobid, title, description, requirements, location FROM joblistings WHERE employerid = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, employerId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    JSONArray jobPosts = new JSONArray();
+
+                    while (resultSet.next()) {
+                        int jobId = resultSet.getInt("jobid");
+                        String title = resultSet.getString("title");
+                        String description = resultSet.getString("description");
+                        String requirements = resultSet.getString("requirements");
+                        String location = resultSet.getString("location");
+
+                        // Construct a JSON object for each job post
+                        JSONObject jobPost = new JSONObject()
+                                .put("jobId", jobId)
+                                .put("title", title)
+                                .put("description", description)
+                                .put("requirements", requirements)
+                                .put("location", location);
+
+                        jobPosts.put(jobPost);
+                    }
+
+                    return jobPosts; // Return the array, even if it's empty
+                }
+            }
+        } catch (SQLException e) {
+            throw new JobRetrievalException("Error retrieving job posts by employer ID.", e);
         }
     }
     public boolean authenticateUser(String email, String password) {
@@ -193,6 +241,276 @@ public class UserService {
         } catch (SQLException e) {
             logSQLExceptionDetails(e);
             return false; // Error during authentication
+        }
+    }
+    public boolean isJobMappedToEmployer(int jobId, int employerId) {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT COUNT(*) FROM joblistings WHERE jobid = ? AND employerid = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, jobId);
+                preparedStatement.setInt(2, employerId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        int count = resultSet.getInt(1);
+                        return count > 0; // If count > 0, the job is mapped to the employer
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logSQLExceptionDetails(e);
+            // Handle the exception appropriately, e.g., log it or throw a custom exception
+        }
+        return false; // Default to false in case of an exception
+    }
+    public String updateJobDescription(int employerId, int jobId, String newJobDescription) throws JobUpdateException {
+        // Check if the job is mapped to the employer
+        if (!isJobMappedToEmployer(jobId, employerId)) {
+            throw new JobUpdateException("Job not mapped to the employer.");
+        }
+
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "UPDATE joblistings SET description = ? WHERE employerid = ? AND jobid = ? RETURNING description";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, newJobDescription);
+                preparedStatement.setInt(2, employerId);
+                preparedStatement.setInt(3, jobId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getString("description");
+                    } else {
+                        throw new JobUpdateException("Job not found or not authorized to update the job.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logSQLExceptionDetails(e);
+            throw new JobUpdateException("Error updating job description.", e);
+        }
+    }
+    public String updateJobLocation(int employerId, int jobId, String newLocation) throws JobUpdateException {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "UPDATE joblistings SET location = ? WHERE employerid = ? AND jobid = ? RETURNING location";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, newLocation);
+                preparedStatement.setInt(2, employerId);
+                preparedStatement.setInt(3, jobId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getString("location");
+                    } else {
+                        throw new JobUpdateException("Job not found or not authorized to update the job.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logSQLExceptionDetails(e);
+            throw new JobUpdateException("Error updating job location.", e);
+        }
+    }
+
+    public String updateJobRequirements(int employerId, int jobId, String newRequirements) throws JobUpdateException {
+        // Check if the job is mapped to the employer
+        if (!isJobMappedToEmployer(jobId, employerId)) {
+            throw new JobUpdateException("Job not mapped to the employer.");
+        }
+
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "UPDATE joblistings SET requirements = ? WHERE employerid = ? AND jobid = ? RETURNING requirements";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, newRequirements);
+                preparedStatement.setInt(2, employerId);
+                preparedStatement.setInt(3, jobId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getString("requirements");
+                    } else {
+                        throw new JobUpdateException("Job not found or not authorized to update the job.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logSQLExceptionDetails(e);
+            throw new JobUpdateException("Error updating job requirements.", e);
+        }
+    }
+    //////////////////////////////////
+public JSONArray getAppliedJobsByJobSeeker(int jobSeekerId) throws JobRetrievalException {
+    try (Connection connection = DbConnector.getConnection()) {
+        String sql = "SELECT j.jobid, j.title, j.description, j.requirements, j.location, a.submissiondate, a.coverletter, a.resumefilepath " +
+                "FROM joblistings j " +
+                "JOIN applications a ON j.jobid = a.jobid " +
+                "WHERE a.jobseekerid = ?";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, jobSeekerId);
+
+            try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                JSONArray appliedJobs = new JSONArray();
+
+                while (resultSet.next()) {
+                    int jobId = resultSet.getInt("jobid");
+                    String title = resultSet.getString("title");
+                    String description = resultSet.getString("description");
+                    String requirements = resultSet.getString("requirements");
+                    String location = resultSet.getString("location");
+                    String submissionDate = resultSet.getString("submissiondate");
+                    String coverLetter = resultSet.getString("coverletter");
+                    String resumeFilePath = resultSet.getString("resumefilepath");
+
+                    // Construct a JSON object for each applied job
+                    JSONObject appliedJob = new JSONObject()
+                            .put("jobId", jobId)
+                            .put("title", title)
+                            .put("description", description)
+                            .put("requirements", requirements)
+                            .put("location", location)
+                            .put("submissionDate", submissionDate)
+                            .put("coverLetter", coverLetter)
+                            .put("resumeFilePath", resumeFilePath);
+
+                    appliedJobs.put(appliedJob);
+                }
+
+                return appliedJobs; // Return the array, even if it's empty
+            }
+        }
+    } catch (SQLException e) {
+        throw new JobRetrievalException("Error retrieving applied jobs by job seeker ID.", e);
+    }
+}
+
+
+    public void deleteJobApplication(int jobSeekerId, int jobId) throws JobDeleteException {
+    // Check if the application exists before attempting to delete
+    if (!hasUserAppliedForJob(jobSeekerId, jobId)) {
+        throw new JobDeleteException("Error deleting job application. Application not found.");
+    }
+
+    try (Connection connection = DbConnector.getConnection()) {
+        // Your SQL query to delete the job application
+        String sql = "DELETE FROM applications WHERE jobseekerid = ? AND jobid = ?";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, jobSeekerId);
+            preparedStatement.setInt(2, jobId);
+
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            if (rowsAffected == 0) {
+                throw new JobDeleteException("Job application not found or not authorized to delete the application.");
+            }
+
+            // Job application deleted successfully
+        }
+    } catch (SQLException e) {
+        logSQLExceptionDetails(e);
+        throw new JobDeleteException("Error deleting job application.", e);
+    }
+}
+public boolean applyForJob(int jobSeekerId, int jobId) throws JobApplicationException {
+    // Check if the user has already applied for the job
+    if (hasUserAppliedForJob(jobSeekerId, jobId)) {
+        throw new JobApplicationException("Error applying for the job. User has already applied.");
+    }
+
+    try (Connection connection = DbConnector.getConnection()) {
+        // Generate random cloud file location path
+        String resumeFilePath = ApplicationUtils.generateRandomFilePath();
+
+        // Generate cover letter text
+        String coverLetter = ApplicationUtils.generateCoverLetter();
+
+        // Your existing code for applying for a job
+        String sql = "INSERT INTO applications (jobseekerid, jobid, resumefilepath, coverletter, submissiondate) " +
+                "VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)";
+
+        try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            preparedStatement.setInt(1, jobSeekerId);
+            preparedStatement.setInt(2, jobId);
+            preparedStatement.setString(3, resumeFilePath);
+            preparedStatement.setString(4, coverLetter);
+
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            return rowsAffected > 0; // Return true if application is successful
+        }
+    } catch (SQLException e) {
+        logSQLExceptionDetails(e);
+        throw new JobApplicationException("Error applying for the job.", e);
+    }
+}
+    public boolean hasUserAppliedForJob(int jobSeekerId, int jobId) {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT COUNT(*) FROM applications WHERE jobseekerid = ? AND jobid = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, jobSeekerId);
+                preparedStatement.setInt(2, jobId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        int count = resultSet.getInt(1);
+                        return count > 0; // If count > 0, the user has already applied for the job
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logSQLExceptionDetails(e);
+            // Handle the exception appropriately, e.g., log it or throw a custom exception
+        }
+        return false; // Default to false in case of an exception
+    }
+
+    public boolean isValidJobSeekerId(int jobSeekerId) {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT usertype FROM users WHERE userid = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, jobSeekerId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        String userType = resultSet.getString("usertype");
+                        return "job_seeker".equalsIgnoreCase(userType);
+                    } else {
+                        return false; // User not found
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logSQLExceptionDetails(e);
+            return false; // Error during validation
+        }
+    }
+
+    public boolean isValidJobId(int jobId) {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT COUNT(*) FROM joblistings WHERE jobid = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, jobId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        int count = resultSet.getInt(1);
+                        return count > 0; // If count > 0, the job ID is valid
+                    }
+                }
+            }
+
+            // If the resultSet is empty or there is an issue with the query
+            return false;
+        } catch (SQLException e) {
+            logSQLExceptionDetails(e);
+            return false; // Default to false in case of an exception
         }
     }
 
