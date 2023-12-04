@@ -27,7 +27,7 @@ pageEncoding="UTF-8"%>
   <body>
     <div class="container mt-5">
       <div class="alert alert-success">Registration Successful.</div>
-      <p><a class="btn btn-primary" href="index.jsp">Login</a></p>
+      <p><a class="btn btn-primary" href="signin.jsp">Login</a></p>
     </div>
   </body>
 </html>
