@@ -1,7 +1,9 @@
-package com.aswinayyappadas.apis.employer;
+package com.aswinayyappadas.apis.employer;// JobPostServlet.java
 
 import com.aswinayyappadas.exceptions.JobPostException;
 import com.aswinayyappadas.services.UserService;
+import io.jsonwebtoken.*;
+import io.jsonwebtoken.security.Keys;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -14,7 +16,9 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Arrays;
+import java.security.Key;
+import java.sql.SQLException;
+import java.util.Base64;
 
 @WebServlet("/api/job-post/employer/*")
 public class JobPostServlet extends HttpServlet {
@@ -32,6 +36,20 @@ public class JobPostServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
+            // Verify JWT token
+
+            // Parse employerId from the API path
+            int employerId = extractEmployerIdFromPath(request.getPathInfo());
+            String email = userService.getEmailByUserId(employerId);
+            String authToken = request.getHeader("Authorization");
+            if (authToken == null || !verifyJwtToken(authToken, email)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
+                return;
+            }
+
+
+
             // Read JSON data from the request body
             BufferedReader reader = request.getReader();
             StringBuilder jsonBody = new StringBuilder();
@@ -49,24 +67,6 @@ public class JobPostServlet extends HttpServlet {
             String requirements = jsonData.getString("requirements");
             String location = jsonData.getString("location");
 
-            // Extract employerId from the URL
-            String[] pathInfo = request.getPathInfo().split("/");
-            System.out.println("pathInfo: " + Arrays.toString(pathInfo));
-            if (pathInfo.length != 2 || !pathInfo[1].matches("\\d+")) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid URL format.\"}");
-                return;
-            }
-
-            int employerId = Integer.parseInt(pathInfo[1]);
-
-            // Validate employerId
-            if (!userService.isValidEmployerId(employerId)) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid employer ID.\"}");
-                return;
-            }
-
             try {
                 // Attempt to post the job
                 userService.postJob(employerId, jobTitle, jobDescription, requirements, location);
@@ -80,6 +80,48 @@ public class JobPostServlet extends HttpServlet {
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.println("{\"status\": \"error\", \"message\": \"Internal Server Error.\"}");
+        }
+    }
+
+    private boolean verifyJwtToken(String token, String email) {
+        try {
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+
+            String secretKey = userService.getJwtSecretKeyByEmail(email);
+
+            if (secretKey == null) {
+                // Handle the case when the secret key is not found for the user
+                return false;
+            }
+
+            // Decode the Base64 URL encoded secret key
+            byte[] decodedSecretKey = Base64.getUrlDecoder().decode(secretKey);
+
+            Claims claims = Jwts.parserBuilder().setSigningKey(Keys.hmacShaKeyFor(decodedSecretKey)).build()
+                    .parseClaimsJws(token).getBody();
+
+            // Additional checks if needed
+            // e.g., check claims.get("iss"), claims.get("aud"), claims.get("nbf"), claims.getExpiration(), etc.
+
+            return true;
+        } catch (JwtException | SQLException e) {
+            // Token verification failed
+            e.printStackTrace(); // Log the exception for debugging
+            return false;
+        }
+    }
+
+
+    private int extractEmployerIdFromPath(String pathInfo) {
+        // Extract employerId from the API path
+        String[] pathParts = pathInfo.split("/");
+        if (pathParts.length == 2 && pathParts[1].matches("\\d+")) {
+            return Integer.parseInt(pathParts[1]);
+        } else {
+            // Handle invalid path or return a sentinel value
+            return -1;
         }
     }
 }

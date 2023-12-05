@@ -95,6 +95,25 @@ public class UserService {
             throw new JobPostException("Error posting job.", e);
         }
     }
+    public String getJwtSecretKeyByEmail(String email) throws SQLException {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT jwt_secret_key FROM users WHERE email = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, email);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getString("jwt_secret_key");
+                    }
+                }
+            }
+        }
+
+        // Return null or handle accordingly based on your requirements
+        return null;
+    }
+
     public boolean isValidEmployerId(int employerId) {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT usertype FROM users WHERE userId = ?";
@@ -115,6 +134,38 @@ public class UserService {
             logSQLExceptionDetails(e);
             return false; // Error during validation
         }
+    }
+    public void storeSecretKeyByEmail(String email, String secretKey) throws SQLException {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "UPDATE users SET jwt_secret_key = ? WHERE email = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, secretKey);
+                preparedStatement.setString(2, email);
+
+                preparedStatement.executeUpdate();
+            }
+        }
+    }
+    public int getEmployerIdByEmail(String email) {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT userid FROM users WHERE email = ? AND usertype = 'Employer'";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, email);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getInt("userid");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logSQLExceptionDetails(e);
+        }
+
+        // Return a sentinel value or throw an exception based on your error handling strategy
+        return -1;
     }
 
     public JSONObject getUserById(int userId) throws UserRetrievalException {
@@ -241,6 +292,25 @@ public class UserService {
         } catch (SQLException e) {
             logSQLExceptionDetails(e);
             return false; // Error during authentication
+        }
+    }
+    public String getEmailByUserId(int userId) throws UserRetrievalException {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT email FROM users WHERE userid = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, userId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getString("email");
+                    } else {
+                        throw new UserRetrievalException("User not found");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new UserRetrievalException("Error retrieving email by user ID.", e);
         }
     }
     public boolean isJobMappedToEmployer(int jobId, int employerId) {
