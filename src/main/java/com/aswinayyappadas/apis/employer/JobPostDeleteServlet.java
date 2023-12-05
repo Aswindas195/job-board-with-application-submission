@@ -1,7 +1,11 @@
 package com.aswinayyappadas.apis.employer;
 
 import com.aswinayyappadas.exceptions.JobDeleteException;
-import com.aswinayyappadas.services.UserService;
+import com.aswinayyappadas.services.GetServices;
+import com.aswinayyappadas.services.JobListingService;
+import com.aswinayyappadas.services.MapperService;
+import com.aswinayyappadas.services.ValidityCheckingService;
+import com.aswinayyappadas.util.jwt.JwtTokenVerifier;
 
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -14,10 +18,16 @@ import java.io.PrintWriter;
 @WebServlet("/api/job-delete/employer/*")
 public class JobPostDeleteServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private final UserService userService;
+    private final JwtTokenVerifier jwtTokenVerifier;
+    private final ValidityCheckingService validityCheckingService;
+    private final GetServices getServices;
+    private final JobListingService jobListingService;
 
     public JobPostDeleteServlet() {
-        this.userService = new UserService();
+        this.validityCheckingService = new ValidityCheckingService();
+        this.getServices = new GetServices();
+        this.jobListingService = new JobListingService();
+        this.jwtTokenVerifier = new JwtTokenVerifier();
     }
 
     @Override
@@ -39,15 +49,34 @@ public class JobPostDeleteServlet extends HttpServlet {
             int jobId = Integer.parseInt(pathInfo[3]);
 
             // Validate employerId
-            if (!userService.isValidEmployerId(employerId)) {
+            if (!validityCheckingService.isValidEmployerId(employerId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.println("{\"status\": \"error\", \"message\": \"Invalid employer ID.\"}");
                 return;
             }
 
+            // Extract other details from the path
+            String email = getServices.getEmailByUserId(employerId);
+            String jwtSecretKey = getServices.getJwtSecretKeyByEmail(email);
+
+            // Check if jwtSecretKey is null
+            if (jwtSecretKey == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. JWT secret key not found.\"}");
+                return;
+            }
+
+            // Read JWT token from the Authorization header
+            String authToken = request.getHeader("Authorization");
+            if (authToken == null || !jwtTokenVerifier.verifyToken(authToken, email, jwtSecretKey)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
+                return;
+            }
+
             try {
                 // Attempt to delete the job
-                userService.deleteJobPost(employerId, jobId);
+                jobListingService.deleteJobPost(employerId, jobId);
                 // You can add more information in the response if needed
                 out.println("{\"status\": \"success\", \"message\": \"Job deleted successfully.\"}");
             } catch (JobDeleteException e) {

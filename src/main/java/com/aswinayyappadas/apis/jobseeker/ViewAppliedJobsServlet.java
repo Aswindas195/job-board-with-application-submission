@@ -1,6 +1,7 @@
 package com.aswinayyappadas.apis.jobseeker;
 
-import com.aswinayyappadas.services.UserService;
+import com.aswinayyappadas.services.*;
+import com.aswinayyappadas.util.jwt.JwtTokenVerifier;
 
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -13,10 +14,14 @@ import java.io.PrintWriter;
 @WebServlet("/api/view-applied-jobs/jobSeeker/*")
 public class ViewAppliedJobsServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private final UserService userService;
+    private final JwtTokenVerifier jwtTokenVerifier;
+    private final ValidityCheckingService validityCheckingService;
+    private final GetServices getServices;
 
     public ViewAppliedJobsServlet() {
-        this.userService = new UserService();
+        this.getServices = new GetServices();
+        this.validityCheckingService = new ValidityCheckingService();
+        this.jwtTokenVerifier = new JwtTokenVerifier();
     }
 
     @Override
@@ -36,14 +41,33 @@ public class ViewAppliedJobsServlet extends HttpServlet {
             int jobSeekerId = Integer.parseInt(pathInfo[1]);
 
             // Check if the job seeker ID is valid
-            if (!userService.isValidJobSeekerId(jobSeekerId)) {
+            if (!validityCheckingService.isValidJobSeekerId(jobSeekerId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.println("{\"status\": \"error\", \"message\": \"Invalid job seeker ID.\"}");
                 return;
             }
 
+            // Extract other details from the path
+            String email = getServices.getEmailByUserId(jobSeekerId);
+            String jwtSecretKey = getServices.getJwtSecretKeyByEmail(email);
+
+            // Check if jwtSecretKey is null
+            if (jwtSecretKey == null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. JWT secret key not found.\"}");
+                return;
+            }
+
+            // Read JWT token from the Authorization header
+            String authToken = request.getHeader("Authorization");
+            if (authToken == null || !jwtTokenVerifier.verifyToken(authToken, email, jwtSecretKey)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
+                return;
+            }
+
             // Retrieve the applied jobs for the job seeker
-            String appliedJobs = userService.getAppliedJobsByJobSeeker(jobSeekerId).toString();
+            String appliedJobs = getServices.getAppliedJobsByJobSeeker(jobSeekerId).toString();
 
             // Send the list of applied jobs as a JSON response
             out.println(appliedJobs);

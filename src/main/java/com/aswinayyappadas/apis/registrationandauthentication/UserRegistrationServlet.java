@@ -1,7 +1,7 @@
 package com.aswinayyappadas.apis.registrationandauthentication;
 
 import com.aswinayyappadas.exceptions.UserRegistrationException;
-import com.aswinayyappadas.services.UserService;
+import com.aswinayyappadas.services.UserManager;
 import com.aswinayyappadas.util.UserInputValidator;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -18,12 +18,14 @@ import org.json.JSONObject;
 @WebServlet("/api/users/register")
 public class UserRegistrationServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private final UserService userService;
+    private final UserManager userManager;
+
     private final UserInputValidator userInputValidator;
+
 
     // Default constructor for servlet container
     public UserRegistrationServlet() {
-        this.userService = new UserService();
+        this.userManager = new UserManager();
         this.userInputValidator = new UserInputValidator();
     }
 
@@ -75,11 +77,15 @@ public class UserRegistrationServlet extends HttpServlet {
 
             try {
                 // Attempt to register the user
-                int rowsAffected = userService.registerUser(username, email, password, usertype);
+                int userId = userManager.registerUser(username, email, password, usertype);
 
-                if (rowsAffected > 0) {
+                if (userId > 0) {
                     // Registration successful
-                    out.println("{\"status\": \"success\", \"message\": \"User registered successfully.\"}");
+                    JSONObject jsonResponse = new JSONObject();
+                    jsonResponse.put("status", "success");
+                    jsonResponse.put("message", "User registered successfully.");
+                    jsonResponse.put("userId", userId);
+                    out.println(jsonResponse.toString());
                 } else {
                     // Database operation failed
                     response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

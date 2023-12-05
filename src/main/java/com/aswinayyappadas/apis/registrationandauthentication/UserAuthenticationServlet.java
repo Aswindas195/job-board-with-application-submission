@@ -1,7 +1,8 @@
 package com.aswinayyappadas.apis.registrationandauthentication;
-import com.aswinayyappadas.services.UserService;
+import com.aswinayyappadas.services.*;
 import com.aswinayyappadas.util.UserInputValidator;
 
+import com.aswinayyappadas.util.jwt.JwtTokenVerifier;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -24,18 +25,19 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
 
-@WebServlet("/api/login")
+@WebServlet("/api/users/login")
 public class UserAuthenticationServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
-    private static final String SECRET_KEY = "your_secret_key";
-    private final UserService userService;
+    private final UserManager userManager;
+    private final GetServices getServices;
     private final UserInputValidator userInputValidator;
-
-
+    private final KeyServices keyServices;
     public UserAuthenticationServlet() {
-        this.userService = new UserService();
+        this.userManager = new UserManager();
+        this.getServices = new GetServices();
         this.userInputValidator = new UserInputValidator();
+        this.keyServices = new KeyServices();
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -58,16 +60,19 @@ public class UserAuthenticationServlet extends HttpServlet {
         String email = jsonData.getString("email");
         String password = jsonData.getString("password");
 
-        boolean isAuthenticated = userService.authenticateUser(email, password);
+       int userId = userManager.authenticateUserAndGetId(email, password);
+       String userType = getServices.getUserTypeByUserId(userId);
 
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
 
-        if (isAuthenticated) {
+        if (userId != -1) {
             try {
                 String authToken = generateJwtToken(email);
                 JSONObject successResponse = new JSONObject();
-                successResponse.put("status", "success");
+                successResponse.put("status", "Authentication success");
+                successResponse.put("user id", userId);
+                successResponse.put("user type", userType);
                 successResponse.put("token", authToken);
                 out.println(successResponse.toString());
             } catch (Exception e) {
@@ -104,7 +109,7 @@ public class UserAuthenticationServlet extends HttpServlet {
         String secretKeyString = Base64.getUrlEncoder().withoutPadding().encodeToString(key.getEncoded());
 
         try {
-            userService.storeSecretKeyByEmail(email, secretKeyString);
+           keyServices.storeSecretKeyByEmail(email, secretKeyString);
         } catch (SQLException e) {
             // Handle the exception appropriately (e.g., log it)
             e.printStackTrace();

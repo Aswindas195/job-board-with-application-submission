@@ -8,10 +8,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import com.aswinayyappadas.dbconnection.DbConnector;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 import org.json.JSONObject;
 public class UserService {
@@ -36,20 +33,36 @@ public class UserService {
 
             String sql = "INSERT INTO users (username, email, passwordhash, usertype, salt) VALUES (?, ?, ?, ?, ?)";
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 preparedStatement.setString(1, username);
                 preparedStatement.setString(2, email);
                 preparedStatement.setString(3, hashedPassword);
                 preparedStatement.setString(4, usertype);
                 preparedStatement.setString(5, salt);
 
-                return preparedStatement.executeUpdate();
+                int rowsAffected = preparedStatement.executeUpdate();
+
+                if (rowsAffected > 0) {
+                    // Retrieve the generated keys
+                    try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
+                        if (generatedKeys.next()) {
+                            return generatedKeys.getInt(1); // This is the generated user ID
+                        } else {
+                            // Handle the case where no key was generated
+                            throw new SQLException("Error generating user ID.");
+                        }
+                    }
+                } else {
+                    // Handle the case where no rows were affected
+                    return 0;
+                }
             }
         } catch (SQLException e) {
             logSQLExceptionDetails(e);
             throw new UserRegistrationException("Error registering user.", e);
         }
     }
+
 
     private boolean isEmailExists(String email) {
         try (Connection connection = DbConnector.getConnection()) {
@@ -113,7 +126,19 @@ public class UserService {
         // Return null or handle accordingly based on your requirements
         return null;
     }
-
+    // Example method to delete jwt_secret_key by email
+    public void deleteJwtSecretKey(String email) {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "UPDATE users SET jwt_secret_key = NULL WHERE email = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, email);
+                preparedStatement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            logSQLExceptionDetails(e);
+            // Handle the exception appropriately (e.g., log it)
+        }
+    }
     public boolean isValidEmployerId(int employerId) {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT usertype FROM users WHERE userId = ?";
@@ -267,33 +292,38 @@ public class UserService {
             throw new JobRetrievalException("Error retrieving job posts by employer ID.", e);
         }
     }
-    public boolean authenticateUser(String email, String password) {
+    public int authenticateUserAndGetId(String email, String password) {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT passwordhash, salt FROM users WHERE email = ?";
+            String sql = "SELECT userid, passwordhash, salt FROM users WHERE email = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, email);
 
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
-                        // Assuming you have a User class; adjust accordingly
+                        int userId = resultSet.getInt("userid");
                         String storedPasswordHash = resultSet.getString("passwordhash");
                         String salt = resultSet.getString("salt");
 
                         // Validate the password by rehashing the entered password with the stored salt
                         String enteredPasswordHash = hashPasswordWithSalt(password, salt);
 
-                        return storedPasswordHash.equals(enteredPasswordHash);
+                        if (storedPasswordHash.equals(enteredPasswordHash)) {
+                            return userId; // Authentication successful, return user ID
+                        } else {
+                            return -1; // Authentication failed
+                        }
                     } else {
-                        return false; // User not found
+                        return -1; // User not found
                     }
                 }
             }
         } catch (SQLException e) {
             logSQLExceptionDetails(e);
-            return false; // Error during authentication
+            return -1; // Error during authentication
         }
     }
+
     public String getEmailByUserId(int userId) throws UserRetrievalException {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT email FROM users WHERE userid = ?";
@@ -412,6 +442,101 @@ public class UserService {
         }
     }
     //////////////////////////////////
+    public String updateResumeFilePath(int jobSeekerId, int jobId, String newResumeFilePath) throws  ApplicationUpdateException{
+        // Check if the application exists before attempting to update
+        if (!hasUserAppliedForJob(jobSeekerId, jobId)) {
+            throw new ApplicationUpdateException("Error updating resume file path. Application not found.");
+        }
+
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "UPDATE applications SET resumefilepath = ? WHERE jobseekerid = ? AND jobid = ? RETURNING resumefilepath";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, newResumeFilePath);
+                preparedStatement.setInt(2, jobSeekerId);
+                preparedStatement.setInt(3, jobId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getString("resumefilepath");
+                    } else {
+                        throw new ApplicationUpdateException("Application not found or not authorized to update the resume file path.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logSQLExceptionDetails(e);
+            throw new ApplicationUpdateException("Error updating resume file path.", e);
+        }
+    }
+    public boolean isApplicationMappedToJobSeeker(int jobSeekerId, int jobId) {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT COUNT(*) FROM applications WHERE jobseekerid = ? AND jobid = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, jobSeekerId);
+                preparedStatement.setInt(2, jobId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        int count = resultSet.getInt(1);
+                        return count > 0; // If count > 0, the application is mapped to the job seeker
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logSQLExceptionDetails(e);
+            // Handle the exception appropriately, e.g., log it or throw a custom exception
+        }
+        return false; // Default to false in case of an exception
+    }
+    // Add this method to get userType from userId
+    public String getUserTypeByUserId(int userId) {
+        // This assumes you have a database connection. Replace "yourDatabaseConnection" with your actual database connection.
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT usertype FROM users WHERE userid = ?";
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, userId);
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getString("usertype");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace(); // Handle the exception according to your application's error handling strategy
+        }
+
+        return null; // Return null if user type is not found
+    }
+
+    public String updateCoverLetter(int jobSeekerId, int jobId, String newCoverLetter) throws ApplicationUpdateException {
+        // Check if the application exists before attempting to update
+        if (!hasUserAppliedForJob(jobSeekerId, jobId)) {
+            throw new ApplicationUpdateException("Error updating cover letter. Application not found.");
+        }
+
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "UPDATE applications SET coverletter = ? WHERE jobseekerid = ? AND jobid = ? RETURNING coverletter";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, newCoverLetter);
+                preparedStatement.setInt(2, jobSeekerId);
+                preparedStatement.setInt(3, jobId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getString("coverletter");
+                    } else {
+                        throw new ApplicationUpdateException("Application not found or not authorized to update the cover letter.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logSQLExceptionDetails(e);
+            throw new ApplicationUpdateException("Error updating cover letter.", e);
+        }
+    }
 public JSONArray getAppliedJobsByJobSeeker(int jobSeekerId) throws JobRetrievalException {
     try (Connection connection = DbConnector.getConnection()) {
         String sql = "SELECT j.jobid, j.title, j.description, j.requirements, j.location, a.submissiondate, a.coverletter, a.resumefilepath " +
@@ -538,7 +663,34 @@ public boolean applyForJob(int jobSeekerId, int jobId) throws JobApplicationExce
         }
         return false; // Default to false in case of an exception
     }
+    public JSONArray getAllJobsFromListings() throws SQLException {
+        JSONArray jobListingsArray = new JSONArray();
 
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT jobid, title, description, location FROM joblistings";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
+                 ResultSet resultSet = preparedStatement.executeQuery()) {
+
+                while (resultSet.next()) {
+                    int jobId = resultSet.getInt("jobid");
+                    String title = resultSet.getString("title");
+                    String description = resultSet.getString("description");
+                    String location = resultSet.getString("location");
+
+                    JSONObject jobListingObject = new JSONObject();
+                    jobListingObject.put("jobId", jobId);
+                    jobListingObject.put("title", title);
+                    jobListingObject.put("description", description);
+                    jobListingObject.put("location", location);
+
+                    jobListingsArray.put(jobListingObject);
+                }
+            }
+        }
+
+        return jobListingsArray;
+    }
     public boolean isValidJobSeekerId(int jobSeekerId) {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT usertype FROM users WHERE userid = ?";
