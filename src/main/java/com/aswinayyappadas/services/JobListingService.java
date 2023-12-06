@@ -6,10 +6,7 @@ import com.aswinayyappadas.exceptions.JobPostException;
 import com.aswinayyappadas.exceptions.JobUpdateException;
 import com.aswinayyappadas.exceptions.LogExceptions;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class JobListingService {
     private final LogExceptions logExceptions;
@@ -21,13 +18,13 @@ public class JobListingService {
         this.mapperService = new MapperService();
     }
 
-    public void postJob(int employerId, String jobTitle, String jobDescription, String requirements, String location)
+    public int postJob(int employerId, String jobTitle, String jobDescription, String requirements, String location)
             throws JobPostException {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "INSERT INTO joblistings (employerid, title, description, requirements, location) " +
                     "VALUES (?, ?, ?, ?, ?)";
 
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 preparedStatement.setInt(1, employerId);
                 preparedStatement.setString(2, jobTitle);
                 preparedStatement.setString(3, jobDescription);
@@ -39,12 +36,21 @@ public class JobListingService {
                 if (rowsAffected <= 0) {
                     throw new JobPostException("Error posting job. Please try again.");
                 }
+
+                // Retrieve the generated job post ID
+                ResultSet generatedKeys = preparedStatement.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    return generatedKeys.getInt(1);
+                } else {
+                    throw new JobPostException("Failed to retrieve the job post ID.");
+                }
             }
         } catch (SQLException e) {
-           logExceptions.logSQLExceptionDetails(e);
+            logExceptions.logSQLExceptionDetails(e);
             throw new JobPostException("Error posting job.", e);
         }
     }
+
     public void deleteJobPost(int employerId, int jobId) throws JobDeleteException {
         try (Connection connection = DbConnector.getConnection()) {
             // Delete corresponding entries from the applications table

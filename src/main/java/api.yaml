@@ -1,0 +1,453 @@
+openapi: 3.0.0
+info:
+  title: Project Time Tracking API
+  version: 0.0.0
+  description: API for tracking time spent on different projects.
+
+servers:
+  - url: https://api.example.com/v1
+
+tags:
+  - name: Authentication
+    description: User registration, login, and logout.
+  - name: TimeRecording
+    description: API for recording hours spent on different projects.
+  - name: ReportGeneration
+    description: API for generating time-tracking reports.
+  - name: ProjectBudgets
+    description: API for setting and managing project budgets.
+  - name: ProjectManagement
+    description: API for managing project details.
+paths:
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userid:
+                  type: integer # Assuming userid is an integer, you can adjust the type accordingly
+                username:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                role:
+                  type: string # Assuming role is a string, you can adjust the type accordingly
+              required:
+                - userid
+                - username
+                - email
+                - password
+                - role
+
+      responses:
+        "201":
+          description: User registered successfully
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              required:
+                - username
+                - password
+      responses:
+        "200":
+          description: User logged in successfully
+        "401":
+          description: Unauthorized
+        "404":
+          description: User not found
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: User logout
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        "200":
+          description: Successful logout
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+
+  /projects/{projectId}/time-entries:
+    get:
+      tags:
+        - TimeRecording
+      summary: Get time entries for a specific project
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          description: ID of the project
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Successful retrieval of time entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: integer
+                    date:
+                      type: string
+                      format: date
+                    hours:
+                      type: number
+                    description:
+                      type: string
+
+    post:
+      tags:
+        - TimeRecording
+
+      summary: Add a new time entry for a specific project
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          description: ID of the project
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date
+                hours:
+                  type: number
+                description:
+                  type: string
+      responses:
+        "201":
+          description: Successful creation of a new time entry
+        "400":
+          description: Bad request
+
+    put:
+      tags:
+        - "TimeRecording"
+      summary: Update details of a specific time entry for a project
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          description: ID of the project
+          schema:
+            type: integer
+        - name: entryId
+          in: path
+          required: true
+          description: ID of the time entry
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                date:
+                  type: string
+                  format: date
+                hours:
+                  type: number
+                description:
+                  type: string
+      responses:
+        "200":
+          description: Successful update of time entry details
+        "400":
+          description: Bad request
+
+    delete:
+      tags:
+        - "TimeRecording"
+      summary: Delete a specific time entry for a project
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: projectId
+          in: path
+          required: true
+          description: ID of the project
+          schema:
+            type: integer
+        - name: entryId
+          in: path
+          required: true
+          description: ID of the time entry
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Successful deletion of time entry
+        "404":
+          description: Time entry not found
+
+  /reports:
+    get:
+      tags:
+        - ReportGeneration
+
+      summary: Generate Time Tracking Report
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/User"
+        - $ref: "#/components/parameters/Project"
+        - $ref: "#/components/parameters/TimePeriod"
+      responses:
+        "200":
+          description: Time tracking report generated successfully
+
+  /projects/{projectId}/budget:
+    get:
+      tags:
+        - ProjectBudgets
+      summary: Get Project Budget
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectBudget"
+      responses:
+        "200":
+          description: Project budget set successfully
+  /projects:
+    get:
+      tags:
+        - ProjectManagement
+      summary: Get all projects
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Successful retrieval of projects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProjectDetails"
+
+    post:
+      tags:
+        - ProjectManagement
+      summary: Create a new project
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Project"
+      responses:
+        "201":
+          description: Project created successfully
+
+  /projects/{projectId}:
+    get:
+      tags:
+        - ProjectManagement
+      summary: Get details of a specific project
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "200":
+          description: Successful retrieval of project details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectDetails"
+
+    put:
+      tags:
+        - ProjectManagement
+      summary: Update details of a specific project
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Project"
+      responses:
+        "200":
+          description: Successful update of project details
+        "400":
+          description: Bad request
+
+    delete:
+      tags:
+        - ProjectManagement
+      summary: Delete a specific project
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: "#/components/parameters/ProjectId"
+      responses:
+        "204":
+          description: Successful deletion of project
+        "404":
+          description: Project not found
+
+components:
+  parameters:
+    User:
+      name: user
+      in: query
+      description: User ID
+      required: false
+      schema:
+        type: string
+
+    Project:
+      name: project
+      in: query
+      description: Project ID
+      required: false
+      schema:
+        type: string
+
+    TimePeriod:
+      name: timePeriod
+      in: query
+      description: Time Period
+      required: false
+      schema:
+        type: string
+
+    ProjectId:
+      name: projectId
+      in: path
+      description: Project ID
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    UserRegistration:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    UserLogin:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    TimeEntry:
+      type: object
+      properties:
+        hours:
+          type: number
+        details:
+          type: string
+      required:
+        - hours
+        - details
+
+    ProjectBudget:
+      type: object
+      properties:
+        budget:
+          type: number
+      required:
+        - budget
+
+    Project:
+      type: object
+      properties:
+        projectName:
+          type: string
+        budget:
+          type: number
+        description:
+          type: string
+      required:
+        - projectName
+        - budget
+
+    ProjectDetails:
+      allOf:
+        - $ref: "#/components/schemas/Project"
+        - type: object
+          properties:
+            projectId:
+              type: integer
+          required:
+            - projectId
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

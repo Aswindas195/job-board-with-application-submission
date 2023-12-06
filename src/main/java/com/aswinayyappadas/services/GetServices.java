@@ -208,6 +208,72 @@ public class GetServices {
 
         return jobListingsArray;
     }
+    public JSONArray getJobsByLocation(String location) throws JobRetrievalException {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT jobid, title, description, requirements FROM joblistings WHERE location = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, location);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    JSONArray jobListingsArray = new JSONArray();
+
+                    while (resultSet.next()) {
+                        int jobId = resultSet.getInt("jobid");
+                        String title = resultSet.getString("title");
+                        String description = resultSet.getString("description");
+                        String requirements = resultSet.getString("requirements");
+
+                        JSONObject jobListingObject = new JSONObject();
+                        jobListingObject.put("jobId", jobId);
+                        jobListingObject.put("title", title);
+                        jobListingObject.put("description", description);
+                        jobListingObject.put("requirements", requirements);
+
+                        jobListingsArray.put(jobListingObject);
+                    }
+
+                    return jobListingsArray;
+                }
+            }
+        } catch (SQLException e) {
+            throw new JobRetrievalException("Error retrieving job listings by location.", e);
+        }
+    }
+    public JSONArray getJobsByTitle(String title) throws JobRetrievalException {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT jobid, title, description, requirements, location FROM joblistings WHERE title = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, title);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    JSONArray jobListingsArray = new JSONArray();
+
+                    while (resultSet.next()) {
+                        int jobId = resultSet.getInt("jobid");
+                        String jobTitle = resultSet.getString("title");
+                        String description = resultSet.getString("description");
+                        String requirements = resultSet.getString("requirements");
+                        String location = resultSet.getString("location");
+
+                        JSONObject jobListingObject = new JSONObject();
+                        jobListingObject.put("jobId", jobId);
+                        jobListingObject.put("title", jobTitle);
+                        jobListingObject.put("description", description);
+                        jobListingObject.put("requirements", requirements);
+                        jobListingObject.put("location", location);
+
+                        jobListingsArray.put(jobListingObject);
+                    }
+
+                    return jobListingsArray;
+                }
+            }
+        } catch (SQLException e) {
+            throw new JobRetrievalException("Error retrieving job listings by title.", e);
+        }
+    }
 
 
 }
