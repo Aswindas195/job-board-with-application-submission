@@ -1,8 +1,7 @@
-package com.aswinayyappadas.apis.registrationandauthentication;
+package com.aswinayyappadas.apis.authentication.post;
 import com.aswinayyappadas.services.*;
-import com.aswinayyappadas.util.UserInputValidator;
+import com.aswinayyappadas.util.user.UserInputValidator;
 
-import com.aswinayyappadas.util.jwt.JwtTokenVerifier;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -23,7 +22,6 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Date;
 
 @WebServlet("/api/users/login")
 public class UserAuthenticationServlet extends HttpServlet {

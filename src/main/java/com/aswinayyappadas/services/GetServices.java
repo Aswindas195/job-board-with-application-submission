@@ -1,8 +1,7 @@
 package com.aswinayyappadas.services;
 
 import com.aswinayyappadas.dbconnection.DbConnector;
-import com.aswinayyappadas.exceptions.JobRetrievalException;
-import com.aswinayyappadas.exceptions.UserRetrievalException;
+import com.aswinayyappadas.exceptions.ExceptionHandler;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -31,7 +30,7 @@ public class GetServices {
         return null;
     }
 
-    public JSONObject getUserById(int userId) throws UserRetrievalException {
+    public JSONObject getUserById(int userId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT username, email, usertype FROM users WHERE userid = ?";
 
@@ -52,16 +51,16 @@ public class GetServices {
                                 .put("email", email)
                                 .put("usertype", userType);
                     } else {
-                        throw new UserRetrievalException("User not found");
+                        throw new ExceptionHandler("User not found");
                     }
                 }
             }
         } catch (SQLException e) {
-            throw new UserRetrievalException("Error retrieving user by ID.", e);
+            throw new ExceptionHandler("Error retrieving user by ID.", e);
         }
     }
 
-    public JSONArray getJobPostsByEmployer(int employerId) throws JobRetrievalException {
+    public JSONArray getJobPostsByEmployer(int employerId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT jobid, title, description, requirements, location FROM joblistings WHERE employerid = ?";
 
@@ -93,11 +92,11 @@ public class GetServices {
                 }
             }
         } catch (SQLException e) {
-            throw new JobRetrievalException("Error retrieving job posts by employer ID.", e);
+            throw new ExceptionHandler("Error retrieving job posts by employer ID.", e);
         }
     }
 
-    public String getEmailByUserId(int userId) throws UserRetrievalException {
+    public String getEmailByUserId(int userId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT email FROM users WHERE userid = ?";
 
@@ -108,12 +107,12 @@ public class GetServices {
                     if (resultSet.next()) {
                         return resultSet.getString("email");
                     } else {
-                        throw new UserRetrievalException("User not found");
+                        throw new ExceptionHandler("User not found");
                     }
                 }
             }
         } catch (SQLException e) {
-            throw new UserRetrievalException("Error retrieving email by user ID.", e);
+            throw new ExceptionHandler("Error retrieving email by user ID.", e);
         }
     }
 
@@ -135,7 +134,7 @@ public class GetServices {
 
         return null; // Return null if user type is not found
     }
-    public JSONArray getAppliedJobsByJobSeeker(int jobSeekerId) throws JobRetrievalException {
+    public JSONArray getAppliedJobsByJobSeeker(int jobSeekerId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT j.jobid, j.title, j.description, j.requirements, j.location, a.submissiondate, a.coverletter, a.resumefilepath " +
                     "FROM joblistings j " +
@@ -176,7 +175,7 @@ public class GetServices {
                 }
             }
         } catch (SQLException e) {
-            throw new JobRetrievalException("Error retrieving applied jobs by job seeker ID.", e);
+            throw new ExceptionHandler("Error retrieving applied jobs by job seeker ID.", e);
         }
     }
 
@@ -208,7 +207,7 @@ public class GetServices {
 
         return jobListingsArray;
     }
-    public JSONArray getJobsByLocation(String location) throws JobRetrievalException {
+    public JSONArray getJobsByLocation(String location) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT jobid, title, description, requirements FROM joblistings WHERE location = ?";
 
@@ -237,10 +236,10 @@ public class GetServices {
                 }
             }
         } catch (SQLException e) {
-            throw new JobRetrievalException("Error retrieving job listings by location.", e);
+            throw new ExceptionHandler("Error retrieving job listings by location.", e);
         }
     }
-    public JSONArray getJobsByTitle(String title) throws JobRetrievalException {
+    public JSONArray getJobsByTitle(String title) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT jobid, title, description, requirements, location FROM joblistings WHERE title = ?";
 
@@ -271,7 +270,7 @@ public class GetServices {
                 }
             }
         } catch (SQLException e) {
-            throw new JobRetrievalException("Error retrieving job listings by title.", e);
+            throw new ExceptionHandler("Error retrieving job listings by title.", e);
         }
     }
 

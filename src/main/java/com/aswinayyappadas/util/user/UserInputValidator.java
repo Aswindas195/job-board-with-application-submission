@@ -1,4 +1,4 @@
-package com.aswinayyappadas.util;
+package com.aswinayyappadas.util.user;
 
 public class UserInputValidator {
 

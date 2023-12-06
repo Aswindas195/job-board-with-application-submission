@@ -1,7 +1,7 @@
 package com.aswinayyappadas.services;
 
 import com.aswinayyappadas.dbconnection.DbConnector;
-import com.aswinayyappadas.exceptions.UserRegistrationException;
+import com.aswinayyappadas.exceptions.ExceptionHandler;
 import org.mindrot.jbcrypt.BCrypt;
 import com.aswinayyappadas.exceptions.LogExceptions;
 
@@ -18,10 +18,10 @@ public class UserManager {
         // Assuming you are using BCrypt for password hashing
         return BCrypt.hashpw(password, salt);
     }
-    public int registerUser(String username, String email, String password, String usertype) throws UserRegistrationException {
+    public int registerUser(String username, String email, String password, String usertype) throws ExceptionHandler {
         // Check if the email already exists in the database
         if (isEmailExists(email)) {
-            throw new UserRegistrationException("Error registering user. Email already exists.");
+            throw new ExceptionHandler("Error registering user. Email already exists.");
         }
 
         try (Connection connection = DbConnector.getConnection()) {
@@ -59,7 +59,7 @@ public class UserManager {
             }
         } catch (SQLException e) {
            logExceptions.logSQLExceptionDetails(e);
-            throw new UserRegistrationException("Error registering user.", e);
+            throw new ExceptionHandler("Error registering user.", e);
         }
     }
 
@@ -115,22 +115,21 @@ public class UserManager {
             return -1; // Error during authentication
         }
     }
-    public String getUserTypeByUserId(int userId) {
-        // This assumes you have a database connection. Replace "yourDatabaseConnection" with your actual database connection.
+    public boolean logoutUser(int userId) {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT usertype FROM users WHERE userid = ?";
+            String sql = "UPDATE users SET jwt_secret_key = NULL WHERE userid = ?";
+
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, userId);
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    if (resultSet.next()) {
-                        return resultSet.getString("usertype");
-                    }
-                }
+
+                int rowsAffected = preparedStatement.executeUpdate();
+
+                // Check if the update was successful
+                return rowsAffected > 0;
             }
         } catch (SQLException e) {
-            e.printStackTrace(); // Handle the exception according to your application's error handling strategy
+            logExceptions.logSQLExceptionDetails(e);
+            return false; // Error during logout
         }
-
-        return null; // Return null if user type is not found
     }
 }

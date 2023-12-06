@@ -1,4 +1,4 @@
-package com.aswinayyappadas.apis.employer;
+package com.aswinayyappadas.apis.employer.get;
 
 import com.aswinayyappadas.services.GetServices;
 import com.aswinayyappadas.services.JobListingService;

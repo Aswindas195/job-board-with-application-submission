@@ -1,4 +1,4 @@
-package com.aswinayyappadas.apis.jobseeker;
+package com.aswinayyappadas.apis.jobseeker.delete;
 
 import com.aswinayyappadas.exceptions.ExceptionHandler;
 import com.aswinayyappadas.services.ApplicationService;

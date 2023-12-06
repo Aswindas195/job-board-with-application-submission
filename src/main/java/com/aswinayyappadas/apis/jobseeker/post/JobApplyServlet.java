@@ -1,4 +1,4 @@
-package com.aswinayyappadas.apis.jobseeker;
+package com.aswinayyappadas.apis.jobseeker.post;
 
 import com.aswinayyappadas.services.ApplicationService;
 import com.aswinayyappadas.services.GetServices;

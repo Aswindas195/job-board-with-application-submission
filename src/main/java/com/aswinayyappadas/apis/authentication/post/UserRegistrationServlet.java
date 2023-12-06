@@ -1,8 +1,8 @@
-package com.aswinayyappadas.apis.registrationandauthentication;
+package com.aswinayyappadas.apis.authentication.post;
 
 import com.aswinayyappadas.exceptions.ExceptionHandler;
 import com.aswinayyappadas.services.UserManager;
-import com.aswinayyappadas.util.UserInputValidator;
+import com.aswinayyappadas.util.user.UserInputValidator;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;

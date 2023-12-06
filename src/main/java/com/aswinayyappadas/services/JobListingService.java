@@ -1,10 +1,7 @@
 package com.aswinayyappadas.services;
 
 import com.aswinayyappadas.dbconnection.DbConnector;
-import com.aswinayyappadas.exceptions.JobDeleteException;
-import com.aswinayyappadas.exceptions.JobPostException;
-import com.aswinayyappadas.exceptions.JobUpdateException;
-import com.aswinayyappadas.exceptions.LogExceptions;
+import com.aswinayyappadas.exceptions.*;
 
 import java.sql.*;
 
@@ -19,7 +16,7 @@ public class JobListingService {
     }
 
     public int postJob(int employerId, String jobTitle, String jobDescription, String requirements, String location)
-            throws JobPostException {
+            throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "INSERT INTO joblistings (employerid, title, description, requirements, location) " +
                     "VALUES (?, ?, ?, ?, ?)";
@@ -34,7 +31,7 @@ public class JobListingService {
                 int rowsAffected = preparedStatement.executeUpdate();
 
                 if (rowsAffected <= 0) {
-                    throw new JobPostException("Error posting job. Please try again.");
+                    throw new ExceptionHandler("Error posting job. Please try again.");
                 }
 
                 // Retrieve the generated job post ID
@@ -42,16 +39,16 @@ public class JobListingService {
                 if (generatedKeys.next()) {
                     return generatedKeys.getInt(1);
                 } else {
-                    throw new JobPostException("Failed to retrieve the job post ID.");
+                    throw new ExceptionHandler("Failed to retrieve the job post ID.");
                 }
             }
         } catch (SQLException e) {
             logExceptions.logSQLExceptionDetails(e);
-            throw new JobPostException("Error posting job.", e);
+            throw new ExceptionHandler("Error posting job.", e);
         }
     }
 
-    public void deleteJobPost(int employerId, int jobId) throws JobDeleteException {
+    public void deleteJobPost(int employerId, int jobId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             // Delete corresponding entries from the applications table
             applicationService.deleteApplicationsForJob(connection, jobId);
@@ -66,20 +63,20 @@ public class JobListingService {
                 int rowsAffected = preparedStatement.executeUpdate();
 
                 if (rowsAffected == 0) {
-                    throw new JobDeleteException("Job not found or not authorized to delete the job.");
+                    throw new ExceptionHandler("Job not found or not authorized to delete the job.");
                 }
 
                 // Job deleted successfully
             }
         } catch (SQLException e) {
            logExceptions.logSQLExceptionDetails(e);
-            throw new JobDeleteException("Error deleting job.", e);
+            throw new ExceptionHandler("Error deleting job.", e);
         }
     }
-    public String updateJobRequirements(int employerId, int jobId, String newRequirements) throws JobUpdateException {
+    public String updateJobRequirements(int employerId, int jobId, String newRequirements) throws ExceptionHandler {
         // Check if the job is mapped to the employer
         if (!mapperService.isJobMappedToEmployer(jobId, employerId)) {
-            throw new JobUpdateException("Job not mapped to the employer.");
+            throw new ExceptionHandler("Job not mapped to the employer.");
         }
 
         try (Connection connection = DbConnector.getConnection()) {
@@ -94,16 +91,16 @@ public class JobListingService {
                     if (resultSet.next()) {
                         return resultSet.getString("requirements");
                     } else {
-                        throw new JobUpdateException("Job not found or not authorized to update the job.");
+                        throw new ExceptionHandler("Job not found or not authorized to update the job.");
                     }
                 }
             }
         } catch (SQLException e) {
            logExceptions.logSQLExceptionDetails(e);
-            throw new JobUpdateException("Error updating job requirements.", e);
+            throw new ExceptionHandler("Error updating job requirements.", e);
         }
     }
-    public String updateJobLocation(int employerId, int jobId, String newLocation) throws JobUpdateException {
+    public String updateJobLocation(int employerId, int jobId, String newLocation) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "UPDATE joblistings SET location = ? WHERE employerid = ? AND jobid = ? RETURNING location";
 
@@ -116,19 +113,19 @@ public class JobListingService {
                     if (resultSet.next()) {
                         return resultSet.getString("location");
                     } else {
-                        throw new JobUpdateException("Job not found or not authorized to update the job.");
+                        throw new ExceptionHandler("Job not found or not authorized to update the job.");
                     }
                 }
             }
         } catch (SQLException e) {
            logExceptions.logSQLExceptionDetails(e);
-            throw new JobUpdateException("Error updating job location.", e);
+            throw new ExceptionHandler("Error updating job location.", e);
         }
     }
-    public String updateJobDescription(int employerId, int jobId, String newJobDescription) throws JobUpdateException {
+    public String updateJobDescription(int employerId, int jobId, String newJobDescription) throws ExceptionHandler {
         // Check if the job is mapped to the employer
         if (!mapperService.isJobMappedToEmployer(jobId, employerId)) {
-            throw new JobUpdateException("Job not mapped to the employer.");
+            throw new ExceptionHandler("Job not mapped to the employer.");
         }
 
         try (Connection connection = DbConnector.getConnection()) {
@@ -143,13 +140,13 @@ public class JobListingService {
                     if (resultSet.next()) {
                         return resultSet.getString("description");
                     } else {
-                        throw new JobUpdateException("Job not found or not authorized to update the job.");
+                        throw new ExceptionHandler("Job not found or not authorized to update the job.");
                     }
                 }
             }
         } catch (SQLException e) {
            logExceptions.logSQLExceptionDetails(e);
-            throw new JobUpdateException("Error updating job description.", e);
+            throw new ExceptionHandler("Error updating job description.", e);
         }
     }
 

@@ -2,8 +2,7 @@ package com.aswinayyappadas.services;
 
 import com.aswinayyappadas.dbconnection.DbConnector;
 import com.aswinayyappadas.exceptions.ApplicationUpdateException;
-import com.aswinayyappadas.exceptions.JobApplicationException;
-import com.aswinayyappadas.exceptions.JobDeleteException;
+import com.aswinayyappadas.exceptions.ExceptionHandler;
 import com.aswinayyappadas.util.application.ApplicationUtils;
 import com.aswinayyappadas.exceptions.LogExceptions;
 
@@ -107,10 +106,10 @@ public class ApplicationService {
             throw new ApplicationUpdateException("Error updating cover letter.", e);
         }
     }
-    public String updateResumeFilePath(int jobSeekerId, int jobId, String newResumeFilePath) throws  ApplicationUpdateException{
+    public String updateResumeFilePath(int jobSeekerId, int jobId, String newResumeFilePath) throws  ExceptionHandler{
         // Check if the application exists before attempting to update
         if (!hasUserAppliedForJob(jobSeekerId, jobId)) {
-            throw new ApplicationUpdateException("Error updating resume file path. Application not found.");
+            throw new ExceptionHandler("Error updating resume file path. Application not found.");
         }
 
         try (Connection connection = DbConnector.getConnection()) {
@@ -125,13 +124,13 @@ public class ApplicationService {
                     if (resultSet.next()) {
                         return resultSet.getString("resumefilepath");
                     } else {
-                        throw new ApplicationUpdateException("Application not found or not authorized to update the resume file path.");
+                        throw new ExceptionHandler("Application not found or not authorized to update the resume file path.");
                     }
                 }
             }
         } catch (SQLException e) {
            logExceptions.logSQLExceptionDetails(e);
-            throw new ApplicationUpdateException("Error updating resume file path.", e);
+            throw new ExceptionHandler("Error updating resume file path.", e);
         }
     }
     public void deleteJobApplicationByJobSeekerId(int jobSeekerId, int jobId) throws JobDeleteException {

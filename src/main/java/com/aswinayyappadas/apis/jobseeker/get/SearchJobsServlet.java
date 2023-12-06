@@ -1,4 +1,4 @@
-package com.aswinayyappadas.apis.jobseeker;
+package com.aswinayyappadas.apis.jobseeker.get;
 
 
 import com.aswinayyappadas.services.*;

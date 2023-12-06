@@ -1,4 +1,4 @@
-package com.aswinayyappadas.apis.registrationandauthentication;
+package com.aswinayyappadas.apis.authentication.post;
 
 import com.aswinayyappadas.services.GetServices;
 import com.aswinayyappadas.services.KeyServices;

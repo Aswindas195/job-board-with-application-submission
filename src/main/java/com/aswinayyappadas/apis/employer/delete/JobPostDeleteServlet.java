@@ -1,4 +1,4 @@
-package com.aswinayyappadas.apis.employer;
+package com.aswinayyappadas.apis.employer.delete;
 
 import com.aswinayyappadas.exceptions.ExceptionHandler;
 import com.aswinayyappadas.services.GetServices;

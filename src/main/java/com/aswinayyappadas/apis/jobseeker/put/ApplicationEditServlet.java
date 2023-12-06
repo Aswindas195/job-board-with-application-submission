@@ -1,4 +1,4 @@
-package com.aswinayyappadas.apis.jobseeker;
+package com.aswinayyappadas.apis.jobseeker.put;
 
 import com.aswinayyappadas.exceptions.ExceptionHandler;
 import com.aswinayyappadas.services.*;
