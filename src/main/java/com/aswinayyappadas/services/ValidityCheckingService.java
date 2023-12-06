@@ -1,12 +1,12 @@
 package com.aswinayyappadas.services;
 
 import com.aswinayyappadas.dbconnection.DbConnector;
+import com.aswinayyappadas.exceptions.LogExceptions;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import com.aswinayyappadas.exceptions.LogExceptions;
 
 public class ValidityCheckingService {
     private final LogExceptions logExceptions;
@@ -32,7 +32,7 @@ public class ValidityCheckingService {
                 }
             }
         } catch (SQLException e) {
-           logExceptions.logSQLExceptionDetails(e);
+            logExceptions.logSQLExceptionDetails(e);
             return false; // Error during validation
         }
     }
@@ -56,6 +56,29 @@ public class ValidityCheckingService {
         } catch (SQLException e) {
             logExceptions.logSQLExceptionDetails(e);
             return false; // Error during validation
+        }
+    }
+
+    public boolean isValidUserId(int userId) {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT COUNT(*) FROM users WHERE userId = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, userId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        int count = resultSet.getInt(1);
+                        return count > 0; // If count > 0, the user ID is valid
+                    }
+                }
+            }
+
+            // If the resultSet is empty or there is an issue with the query
+            return false;
+        } catch (SQLException e) {
+            logExceptions.logSQLExceptionDetails(e);
+            return false; // Default to false in case of an exception
         }
     }
 
