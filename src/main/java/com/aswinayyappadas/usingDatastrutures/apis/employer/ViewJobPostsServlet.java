@@ -1,8 +1,6 @@
 package com.aswinayyappadas.usingDatastrutures.apis.employer;
 
-import com.aswinayyappadas.usingDatabase.exceptions.ExceptionHandler;
 import com.aswinayyappadas.usingDatastrutures.services.GetServices;
-import com.aswinayyappadas.usingDatastrutures.services.JobListingService;
 import com.aswinayyappadas.usingDatastrutures.services.KeyServices;
 import com.aswinayyappadas.usingDatastrutures.services.ValidityCheckingService;
 import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
@@ -10,31 +8,30 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.json.JSONObject;
+import org.json.JSONArray;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/ds/job-post/employer/*")
-public class JobPostServlet extends HttpServlet {
+@WebServlet("/api/ds/view-job-posts/employer/*")
+public class ViewJobPostsServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
     private final GetServices getServices;
-    private final JobListingService jobListingService;
     private final KeyServices keyServices;
 
-    public JobPostServlet() {
+
+    public ViewJobPostsServlet() {
         this.validityCheckingService = new ValidityCheckingService();
         this.getServices = new GetServices();
-        this.jobListingService = new JobListingService();
         this.jwtTokenVerifier = new JwtTokenVerifier();
         this.keyServices = new KeyServices();
     }
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
@@ -47,6 +44,7 @@ public class JobPostServlet extends HttpServlet {
                 out.println("{\"status\": \"error\", \"message\": \"Invalid URL format.\"}");
                 return;
             }
+
             int employerId = Integer.parseInt(pathInfo[1]);
 
             // Validate employerId
@@ -75,29 +73,18 @@ public class JobPostServlet extends HttpServlet {
                 return;
             }
 
-            // Read JSON data from the request body
-            BufferedReader reader = request.getReader();
-            StringBuilder jsonBody = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                jsonBody.append(line);
+            try {
+                // Fetch job posts for the given employerId
+                JSONArray jobPosts = getServices.getJobPostsByEmployer(employerId);
+
+                // Return the job posts as JSON
+                out.println(jobPosts.toString());
+            } catch (Exception e) {
+                // Handle other exceptions
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                out.println("{\"status\": \"error\", \"message\": \"Internal Server Error.\"}");
             }
-
-            // Parse JSON data
-            JSONObject jsonData = new JSONObject(jsonBody.toString());
-
-            // Extract job post data from JSON
-            String jobTitle = jsonData.getString("jobTitle");
-            String jobDescription = jsonData.getString("jobDescription");
-            String requirements = jsonData.getString("requirements");
-            String location = jsonData.getString("location");
-
-            // Attempt to post the job
-            int jobPostId = jobListingService.postJob(employerId, jobTitle, jobDescription, requirements, location);
-            // You can add more information in the response if needed
-            out.println("{\"status\": \"success\", \"message\": \"Job posted successfully.\", \"jobPostId\": " + jobPostId + "}");
         } catch (Exception e) {
-            // Handle any unexpected exceptions
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.println("{\"status\": \"error\", \"message\": \"Internal Server Error.\"}");
         }

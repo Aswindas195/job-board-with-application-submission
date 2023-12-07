@@ -74,6 +74,7 @@ public class UserManager implements UserData {
         employer.setEmployerId(userId);
         employer.setName(username);
         employer.setEmail(email);
+        employer.setSalt(salt);
         employer.setPassword(passwordHash);
         return employer;
     }

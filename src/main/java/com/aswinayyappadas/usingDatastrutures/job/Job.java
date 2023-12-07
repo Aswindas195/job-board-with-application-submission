@@ -1,16 +1,25 @@
 package com.aswinayyappadas.usingDatastrutures.job;
 
 public class Job {
-    private String jobId;
+    private int jobId;
     private String title;
     private String description;
     private String loaction;
+    private String requirements;
 
-    public String getJobId() {
+    public String getRequirements() {
+        return requirements;
+    }
+
+    public void setRequirements(String requirements) {
+        this.requirements = requirements;
+    }
+
+    public int getJobId() {
         return jobId;
     }
 
-    public void setJobId(String jobId) {
+    public void setJobId(int jobId) {
         this.jobId = jobId;
     }
 

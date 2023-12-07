@@ -4,6 +4,7 @@ import com.aswinayyappadas.usingDatastrutures.job.Job;
 
 import java.util.HashMap;
 
-public interface JobListing {
+public interface JobListData {
     HashMap<Integer, Job> jobList = new HashMap<>();
+    HashMap<Integer, Job> employerJobList = new HashMap<>();
 }
