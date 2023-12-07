@@ -2,35 +2,35 @@ package com.aswinayyappadas.usingDatastrutures.applications;
 
 import java.util.Date;
 
-public class Applications {
-    private String applicationId;
-    private String jobId;
-    private String jobseekerId;
+public class Application {
+    private int applicationId;
+    private int jobId;
+    private int jobseekerId;
     private Date submissionDate;
     private String resumeFilePath;
     private String coverLetter;
 
-    public String getApplicationId() {
+    public int getApplicationId() {
         return applicationId;
     }
 
-    public void setApplicationId(String applicationId) {
+    public void setApplicationId(int applicationId) {
         this.applicationId = applicationId;
     }
 
-    public String getJobId() {
+    public int getJobId() {
         return jobId;
     }
 
-    public void setJobId(String jobId) {
+    public void setJobId(int jobId) {
         this.jobId = jobId;
     }
 
-    public String getJobseekerId() {
+    public int getJobseekerId() {
         return jobseekerId;
     }
 
-    public void setJobseekerId(String jobseekerId) {
+    public void setJobseekerId(int jobseekerId) {
         this.jobseekerId = jobseekerId;
     }
 

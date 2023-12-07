@@ -1,10 +1,10 @@
-package com.aswinayyappadas.usingDatabase.apis.jobseeker.get;
+package com.aswinayyappadas.usingDatastrutures.apis.jobseeker.get;
 
 
 
-import com.aswinayyappadas.usingDatabase.services.GetServices;
-import com.aswinayyappadas.usingDatabase.services.KeyServices;
-import com.aswinayyappadas.usingDatabase.services.ValidityCheckingService;
+import com.aswinayyappadas.usingDatastrutures.services.GetServices;
+import com.aswinayyappadas.usingDatastrutures.services.KeyServices;
+import com.aswinayyappadas.usingDatastrutures.services.ValidityCheckingService;
 import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -15,7 +15,7 @@ import org.json.JSONArray;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/search-job/jobSeeker/*")
+@WebServlet("/api/ds/search-job/jobSeeker/*")
 public class SearchJobsServlet extends HttpServlet{
     private static final long serialVersionUID = 1L;
     private final JwtTokenVerifier jwtTokenVerifier;
@@ -72,7 +72,6 @@ public class SearchJobsServlet extends HttpServlet{
                 out.println("{\"status\": \"error\", \"message\": \"Invalid jobseeker ID.\"}");
                 return;
             }
-
             JSONArray jsonArray;
             if (validityCheckingService.isValidJobSeekerId(jobSeekerId)) {
                 switch (searchType) {

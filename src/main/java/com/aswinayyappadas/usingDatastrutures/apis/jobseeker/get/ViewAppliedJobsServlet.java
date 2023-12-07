@@ -1,31 +1,27 @@
-package com.aswinayyappadas.usingDatabase.apis.jobseeker.post;
+package com.aswinayyappadas.usingDatastrutures.apis.jobseeker.get;
 
-import com.aswinayyappadas.usingDatabase.services.ApplicationService;
-import com.aswinayyappadas.usingDatabase.services.GetServices;
-import com.aswinayyappadas.usingDatabase.services.KeyServices;
-import com.aswinayyappadas.usingDatabase.services.ValidityCheckingService;
+
+import com.aswinayyappadas.usingDatastrutures.services.GetServices;
+import com.aswinayyappadas.usingDatastrutures.services.KeyServices;
+import com.aswinayyappadas.usingDatastrutures.services.ValidityCheckingService;
 import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
-
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/job-apply/jobSeeker/*")
-public class JobApplyServlet extends HttpServlet {
+@WebServlet("/api/ds/view-applied-jobs/jobSeeker/*")
+public class ViewAppliedJobsServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
     private final GetServices getServices;
-    private final ApplicationService applicationService;
     private final KeyServices keyServices;
 
-    public JobApplyServlet() {
-        this.applicationService = new ApplicationService();
+    public ViewAppliedJobsServlet() {
         this.getServices = new GetServices();
         this.validityCheckingService = new ValidityCheckingService();
         this.jwtTokenVerifier = new JwtTokenVerifier();
@@ -33,22 +29,20 @@ public class JobApplyServlet extends HttpServlet {
     }
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
 
         try {
-            // Extract job seeker details and job ID from the request parameters
+            // Extract job seeker ID from the request parameters
             String[] pathInfo = request.getPathInfo().split("/");
-            if (pathInfo.length != 4 || !pathInfo[1].matches("\\d+") || !pathInfo[3].matches("\\d+")) {
+            if (pathInfo.length != 2 || !pathInfo[1].matches("\\d+")) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.println("{\"status\": \"error\", \"message\": \"Invalid URL format.\"}");
                 return;
             }
 
             int jobSeekerId = Integer.parseInt(pathInfo[1]);
-            int jobId = Integer.parseInt(pathInfo[3]);
 
             // Check if the job seeker ID is valid
             if (!validityCheckingService.isValidJobSeekerId(jobSeekerId)) {
@@ -76,36 +70,19 @@ public class JobApplyServlet extends HttpServlet {
                 return;
             }
 
-            // Check if the job ID is valid
-            if (!validityCheckingService.isValidJobId(jobId)) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid job ID.\"}");
-                return;
-            }
+            // Retrieve the applied jobs for the job seeker
+            String appliedJobs = getServices.getAppliedJobsByJobSeeker(jobSeekerId).toString();
 
-            // Perform the job application
-            JSONObject applicationDetails = applicationService.applyForJob(jobSeekerId, jobId);
-
-            if (applicationDetails != null) {
-                // Include application details in the success response
-                JSONObject successResponse = new JSONObject();
-                successResponse.put("status", "success");
-                successResponse.put("message", "Job application successful");
-                successResponse.put("applicationDetails", applicationDetails);
-
-                // Convert the success response to a JSON string and print it
-                out.println(successResponse.toString());
-            }  else {
-                out.println("{\"status\": \"error\", \"message\": \"Error applying for the job.\"}");
-            }
+            // Send the list of applied jobs as a JSON response
+            out.println(appliedJobs);
         } catch (NumberFormatException e) {
-            // Handle invalid input (non-integer values for jobSeekerId or jobId)
+            // Handle invalid input (non-integer values for jobSeekerId)
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             out.println("{\"status\": \"error\", \"message\": \"Invalid input format.\"}");
         } catch (Exception e) {
             // Handle other exceptions
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.println("{\"status\": \"error\", \"message\": \"" + e.getMessage() + "\"}");
+            out.println("{\"status\": \"error\", \"message\": \"Internal Server Error.\"}");
         }
     }
 }

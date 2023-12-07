@@ -1,7 +1,6 @@
-package com.aswinayyappadas.usingDatabase.apis.jobseeker.put;
+package com.aswinayyappadas.usingDatastrutures.apis.jobseeker.put;
 
-import com.aswinayyappadas.usingDatabase.exceptions.ExceptionHandler;
-import com.aswinayyappadas.usingDatabase.services.*;
+import com.aswinayyappadas.usingDatastrutures.services.*;
 import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,23 +12,22 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-
 import java.util.Iterator;
 
 
-@WebServlet("/api/edit-application/jobSeeker/*")
+@WebServlet("/api/ds/edit-application/jobSeeker/*")
 public class ApplicationEditServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
     private final GetServices getServices;
-    private final MapperService mapperService;
+    private final MapperServices mapperService;
     private final ApplicationService applicationService;
     private final KeyServices keyServices;
 
     public ApplicationEditServlet() {
         this.applicationService = new ApplicationService();
-        this.mapperService = new MapperService();
+        this.mapperService = new MapperServices();
         this.getServices = new GetServices();
         this.validityCheckingService = new ValidityCheckingService();
         this.jwtTokenVerifier = new JwtTokenVerifier();
@@ -104,23 +102,14 @@ public class ApplicationEditServlet extends HttpServlet {
             while (keys.hasNext()) {
                 keyDetailType = keys.next();
             }
+
             // Validate 'detailType' against allowed values
-            if (!isValidDetailType(detailType)) {
+            if (!isValidDetailType(detailType) || !isValidDetailType(keyDetailType) || !detailType.equals(keyDetailType)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid 'detailType' value in the request URL.\"}");
+                out.println("{\"status\": \"error\", \"message\": \"Invalid detail type in the request.\"}");
                 return;
             }
-            // Validate 'detailType' against allowed values
-            if (!isValidDetailType(keyDetailType)) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid 'detailType' in request body.\"}");
-                return;
-            }
-            if (!detailType.equals(keyDetailType)) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid request and 'dataType'.\"}");
-                return;
-            }
+
 
             // Perform the application details update based on the detail type
             switch (detailType) {
@@ -152,20 +141,17 @@ public class ApplicationEditServlet extends HttpServlet {
                 out.println(successResponse.toString());
             }
         } catch (NumberFormatException e) {
-            // Handle invalid input (non-integer values for jobSeekerId or applicationId)
+            // Handle invalid input (non-integer values for jobSeekerId or jobId)
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             out.println("{\"status\": \"error\", \"message\": \"Invalid input format.\"}");
-        } catch (ExceptionHandler e) {
-            // Handle application update exception
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.println("{\"status\": \"error\", \"message\": \"" + e.getMessage() + "\"}");
         } catch (Exception e) {
             // Handle any unexpected exceptions
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.println("{\"status\": \"error\", \"message\": \"Internal Server Error.\"}");
         }
     }
-    private boolean isValidDetailType (String detailType){
+
+    private boolean isValidDetailType(String detailType) {
         return "resumefilepath".equals(detailType) || "coverletter".equals(detailType);
     }
 }

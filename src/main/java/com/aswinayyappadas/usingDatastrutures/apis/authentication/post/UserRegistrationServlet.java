@@ -1,4 +1,4 @@
-package com.aswinayyappadas.usingDatastrutures.apis.authentication;
+package com.aswinayyappadas.usingDatastrutures.apis.authentication.post;
 import com.aswinayyappadas.usingDatastrutures.services.UserManager;
 import com.aswinayyappadas.usingDatastrutures.employer.Employer;
 

@@ -66,6 +66,7 @@ public class UserManager implements UserData {
         jobseeker.setJobseekerId(userId);
         jobseeker.setName(username);
         jobseeker.setEmail(email);
+        jobseeker.setSalt(salt);
         jobseeker.setPassword(passwordHash);
         return jobseeker;
     }

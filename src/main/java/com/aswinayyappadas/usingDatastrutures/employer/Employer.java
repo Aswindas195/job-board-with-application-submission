@@ -1,5 +1,8 @@
 package com.aswinayyappadas.usingDatastrutures.employer;
 import com.aswinayyappadas.usingDatastrutures.user.User;
+
+import java.util.HashSet;
+
 public class Employer extends User{
     private int employerId;
 
@@ -9,5 +12,4 @@ public class Employer extends User{
     public void setEmployerId(int employerId) {
         this.employerId = employerId;
     }
-
 }

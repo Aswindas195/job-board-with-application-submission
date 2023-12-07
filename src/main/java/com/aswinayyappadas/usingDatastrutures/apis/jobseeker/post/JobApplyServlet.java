@@ -1,11 +1,10 @@
-package com.aswinayyappadas.usingDatabase.apis.jobseeker.post;
+package com.aswinayyappadas.usingDatastrutures.apis.jobseeker.post;
 
-import com.aswinayyappadas.usingDatabase.services.ApplicationService;
-import com.aswinayyappadas.usingDatabase.services.GetServices;
-import com.aswinayyappadas.usingDatabase.services.KeyServices;
-import com.aswinayyappadas.usingDatabase.services.ValidityCheckingService;
+import com.aswinayyappadas.usingDatastrutures.services.ApplicationService;
+import com.aswinayyappadas.usingDatastrutures.services.GetServices;
+import com.aswinayyappadas.usingDatastrutures.services.KeyServices;
+import com.aswinayyappadas.usingDatastrutures.services.ValidityCheckingService;
 import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
-
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,7 +14,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/job-apply/jobSeeker/*")
+@WebServlet("/api/ds/job-apply/jobSeeker/*")
 public class JobApplyServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final JwtTokenVerifier jwtTokenVerifier;
@@ -95,7 +94,7 @@ public class JobApplyServlet extends HttpServlet {
 
                 // Convert the success response to a JSON string and print it
                 out.println(successResponse.toString());
-            }  else {
+            } else {
                 out.println("{\"status\": \"error\", \"message\": \"Error applying for the job.\"}");
             }
         } catch (NumberFormatException e) {

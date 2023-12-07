@@ -1,7 +1,8 @@
-package com.aswinayyappadas.usingDatabase.apis.jobseeker.put;
+package com.aswinayyappadas.usingDatastrutures.apis.employer.put;
 
 import com.aswinayyappadas.usingDatabase.exceptions.ExceptionHandler;
-import com.aswinayyappadas.usingDatabase.services.*;
+import com.aswinayyappadas.usingDatastrutures.services.MapperServices;
+import com.aswinayyappadas.usingDatastrutures.services.*;
 import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -13,23 +14,21 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-
 import java.util.Iterator;
 
-
-@WebServlet("/api/edit-application/jobSeeker/*")
-public class ApplicationEditServlet extends HttpServlet {
+@WebServlet("/api/ds/edit-job/employer/*")
+public class JobEditServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
+
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
     private final GetServices getServices;
-    private final MapperService mapperService;
-    private final ApplicationService applicationService;
+    private final MapperServices mapperService;
+    private final JobListingService jobListingService;
     private final KeyServices keyServices;
-
-    public ApplicationEditServlet() {
-        this.applicationService = new ApplicationService();
-        this.mapperService = new MapperService();
+    public JobEditServlet() {
+        this.jobListingService = new JobListingService();
+        this.mapperService = new MapperServices();
         this.getServices = new GetServices();
         this.validityCheckingService = new ValidityCheckingService();
         this.jwtTokenVerifier = new JwtTokenVerifier();
@@ -43,7 +42,7 @@ public class ApplicationEditServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
-            // Extract job seeker details, application ID, and new application details from the request parameters
+            // Extract employer details, job ID, and new job details from the request parameters
             String[] pathInfo = request.getPathInfo().split("/");
             if (pathInfo.length != 5 || !pathInfo[1].matches("\\d+") || !pathInfo[4].matches("\\d+")) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -51,19 +50,19 @@ public class ApplicationEditServlet extends HttpServlet {
                 return;
             }
 
-            int jobSeekerId = Integer.parseInt(pathInfo[1]);
+            int employerId = Integer.parseInt(pathInfo[1]);
             int jobId = Integer.parseInt(pathInfo[4]);
             String detailType = pathInfo[2];
 
-            // Parse jobSeekerId from the API path
-            if (!validityCheckingService.isValidJobSeekerId(jobSeekerId)) {
+            // Parse employerId from the API path
+            if (!validityCheckingService.isValidEmployerId(employerId)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid job seeker ID.\"}");
+                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid employer ID.\"}");
                 return;
             }
 
             // Extract other details from the path
-            String email = getServices.getEmailByUserId(jobSeekerId);
+            String email = getServices.getEmailByUserId(employerId);
             String jwtSecretKey = keyServices.getJwtSecretKeyByEmail(email);
 
             // Check if jwtSecretKey is null
@@ -81,10 +80,10 @@ public class ApplicationEditServlet extends HttpServlet {
                 return;
             }
 
-            // Check if the application is mapped to the job seeker
-            if (!mapperService.isApplicationMappedToJobSeeker(jobSeekerId, jobId)) {
+            // Check if the job is mapped to the employer
+            if (!mapperService.isJobMappedToEmployer(jobId, employerId)) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                out.println("{\"status\": \"error\", \"message\": \"Application not mapped to the job seeker.\"}");
+                out.println("{\"status\": \"error\", \"message\": \"Job not mapped to the employer.\"}");
                 return;
             }
 
@@ -96,13 +95,11 @@ public class ApplicationEditServlet extends HttpServlet {
                     requestBody.append(line);
                 }
             }
-
-            // Convert the JSON body to a JSONObject
             JSONObject jsonBody = new JSONObject(requestBody.toString());
             Iterator<String> keys = jsonBody.keys();
             String keyDetailType = "";
             while (keys.hasNext()) {
-                keyDetailType = keys.next();
+                 keyDetailType = keys.next();
             }
             // Validate 'detailType' against allowed values
             if (!isValidDetailType(detailType)) {
@@ -116,21 +113,27 @@ public class ApplicationEditServlet extends HttpServlet {
                 out.println("{\"status\": \"error\", \"message\": \"Invalid 'detailType' in request body.\"}");
                 return;
             }
-            if (!detailType.equals(keyDetailType)) {
+            if(!detailType.equals(keyDetailType)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.println("{\"status\": \"error\", \"message\": \"Invalid request and 'dataType'.\"}");
                 return;
             }
+            String updatedData = "";  // Updated data will be assigned based on the detail type
+            String message = "Job details updated successfully.";
 
-            // Perform the application details update based on the detail type
+            // Perform the job details update based on the detail type
             switch (detailType) {
-                case "resumefilepath":
-                    String newResumeFilePath = jsonBody.optString("resumefilepath");
-                    applicationService.updateResumeFilePath(jobSeekerId, jobId, newResumeFilePath);
+                case "description":
+                    String newJobDescription = jsonBody.optString("description");
+                    updatedData = jobListingService.updateJobDescription(jobId, newJobDescription);
                     break;
-                case "coverletter":
-                    String newCoverLetter = jsonBody.optString("coverletter");
-                    applicationService.updateCoverLetter(jobSeekerId, jobId, newCoverLetter);
+                case "location":
+                    String newLocation = jsonBody.optString("location");
+                    updatedData = jobListingService.updateJobLocation(jobId, newLocation);
+                    break;
+                case "requirements":
+                    String newRequirements = jsonBody.optString("requirements");
+                    updatedData = jobListingService.updateJobRequirements(jobId, newRequirements);
                     break;
                 default:
                     response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -138,34 +141,25 @@ public class ApplicationEditServlet extends HttpServlet {
                     return;
             }
 
-            // Perform the job application
-            JSONObject applicationDetails = applicationService.displayUpdatedApplication(jobSeekerId, jobId);
+            // Prepare the JSON response
+            JSONObject jsonResponse = new JSONObject();
+            jsonResponse.put("status", "success");
+            jsonResponse.put("message", message);
+            jsonResponse.put("updatedData", updatedData);
 
-            if (applicationDetails != null) {
-                // Include application details in the success response
-                JSONObject successResponse = new JSONObject();
-                successResponse.put("status", "success");
-                successResponse.put("message", "Job application edited successfully");
-                successResponse.put("applicationDetails", applicationDetails);
-
-                // Convert the success response to a JSON string and print it
-                out.println(successResponse.toString());
-            }
+            out.println(jsonResponse.toString());
         } catch (NumberFormatException e) {
-            // Handle invalid input (non-integer values for jobSeekerId or applicationId)
+            // Handle invalid input (non-integer values for employerId or jobId)
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             out.println("{\"status\": \"error\", \"message\": \"Invalid input format.\"}");
-        } catch (ExceptionHandler e) {
-            // Handle application update exception
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.println("{\"status\": \"error\", \"message\": \"" + e.getMessage() + "\"}");
         } catch (Exception e) {
             // Handle any unexpected exceptions
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.println("{\"status\": \"error\", \"message\": \"Internal Server Error.\"}");
         }
     }
-    private boolean isValidDetailType (String detailType){
-        return "resumefilepath".equals(detailType) || "coverletter".equals(detailType);
+
+    private boolean isValidDetailType(String detailType) {
+        return "description".equals(detailType) || "location".equals(detailType) || "requirements".equals(detailType);
     }
 }

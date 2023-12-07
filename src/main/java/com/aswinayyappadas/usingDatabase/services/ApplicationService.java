@@ -4,6 +4,7 @@ import com.aswinayyappadas.usingDatabase.dbconnection.DbConnector;
 import com.aswinayyappadas.usingDatabase.exceptions.ExceptionHandler;
 import com.aswinayyappadas.usingDatabase.exceptions.LogExceptions;
 import com.aswinayyappadas.usingDatabase.util.application.ApplicationUtils;
+import org.json.JSONObject;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -17,7 +18,8 @@ public class ApplicationService {
         this.logExceptions = new LogExceptions();
     }
 
-    public boolean applyForJob(int jobSeekerId, int jobId) throws ExceptionHandler {
+
+    public JSONObject applyForJob(int jobSeekerId, int jobId) throws ExceptionHandler {
         // Check if the user has already applied for the job
         if (hasUserAppliedForJob(jobSeekerId, jobId)) {
             throw new ExceptionHandler("Error applying for the job. User has already applied.");
@@ -32,7 +34,7 @@ public class ApplicationService {
 
             // Your existing code for applying for a job
             String sql = "INSERT INTO applications (jobseekerid, jobid, resumefilepath, coverletter, submissiondate) " +
-                    "VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)";
+                    "VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP) RETURNING *";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, jobSeekerId);
@@ -40,15 +42,31 @@ public class ApplicationService {
                 preparedStatement.setString(3, resumeFilePath);
                 preparedStatement.setString(4, coverLetter);
 
-                int rowsAffected = preparedStatement.executeUpdate();
+                ResultSet resultSet = preparedStatement.executeQuery();
 
-                return rowsAffected > 0; // Return true if application is successful
+                if (resultSet.next()) {
+                    // Application successful, create a JSON object with all fields
+                    JSONObject applicationDetails = new JSONObject();
+                    applicationDetails.put("applicationId", resultSet.getInt("applicationid"));
+                    applicationDetails.put("jobSeekerId", resultSet.getInt("jobseekerid"));
+                    applicationDetails.put("jobId", resultSet.getInt("jobid"));
+                    applicationDetails.put("resumeFilePath", resultSet.getString("resumefilepath"));
+                    applicationDetails.put("coverLetter", resultSet.getString("coverletter"));
+                    applicationDetails.put("submissionDate", resultSet.getTimestamp("submissiondate").toString());
+                    // Add other fields as needed
+
+                    return applicationDetails;
+                }
+
+                // Return null if application is not successful
+                return null;
             }
         } catch (SQLException e) {
-           logExceptions.logSQLExceptionDetails(e);
+            logExceptions.logSQLExceptionDetails(e);
             throw new ExceptionHandler("Error applying for the job.", e);
         }
     }
+
     public boolean hasUserAppliedForJob(int jobSeekerId, int jobId) {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT COUNT(*) FROM applications WHERE jobseekerid = ? AND jobid = ?";
@@ -159,4 +177,42 @@ public class ApplicationService {
             throw new ExceptionHandler("Error deleting job application.", e);
         }
     }
+    public JSONObject displayUpdatedApplication(int jobSeekerId, int jobId) throws ExceptionHandler {
+        // Check if the application exists before attempting to display
+        if (!hasUserAppliedForJob(jobSeekerId, jobId)) {
+            throw new ExceptionHandler("Error displaying edited application. Application not found.");
+        }
+
+        try (Connection connection = DbConnector.getConnection()) {
+            // Your SQL query to retrieve the edited application details
+            String sql = "SELECT * FROM applications WHERE jobseekerid = ? AND jobid = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, jobSeekerId);
+                preparedStatement.setInt(2, jobId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        // Application details found, create a JSON object with all fields
+                        JSONObject applicationDetails = new JSONObject();
+                        applicationDetails.put("applicationId", resultSet.getInt("applicationid"));
+                        applicationDetails.put("jobSeekerId", resultSet.getInt("jobseekerid"));
+                        applicationDetails.put("jobId", resultSet.getInt("jobid"));
+                        applicationDetails.put("resumeFilePath", resultSet.getString("resumefilepath"));
+                        applicationDetails.put("coverLetter", resultSet.getString("coverletter"));
+                        applicationDetails.put("submissionDate", resultSet.getTimestamp("submissiondate").toString());
+                        // Add other fields as needed
+
+                        return applicationDetails;
+                    } else {
+                        throw new ExceptionHandler("Application not found or not authorized to display the edited application.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logExceptions.logSQLExceptionDetails(e);
+            throw new ExceptionHandler("Error displaying edited application.", e);
+        }
+    }
+
 }

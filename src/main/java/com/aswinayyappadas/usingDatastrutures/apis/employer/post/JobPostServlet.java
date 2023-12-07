@@ -1,4 +1,4 @@
-package com.aswinayyappadas.usingDatastrutures.apis.employer;
+package com.aswinayyappadas.usingDatastrutures.apis.employer.post;
 
 import com.aswinayyappadas.usingDatabase.exceptions.ExceptionHandler;
 import com.aswinayyappadas.usingDatastrutures.services.GetServices;
