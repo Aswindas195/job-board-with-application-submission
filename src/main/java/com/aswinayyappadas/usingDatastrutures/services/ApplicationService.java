@@ -56,6 +56,8 @@ public class ApplicationService implements ApplicationsDataList, JobListData {
         applicationList.put(application.getApplicationId(), application);
 
         // Update jobseekerApplicationList
+        jobApplicationsList.putIfAbsent(jobId, new HashSet<>());
+        jobApplicationsList.get(jobId).add(application.getApplicationId());
         jobseekerApplicationList.putIfAbsent(jobSeekerId, new HashSet<>());
         jobseekerApplicationList.get(jobSeekerId).add(jobId);
 

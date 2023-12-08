@@ -256,4 +256,48 @@ public class GetServices {
     }
 
 
+    public JSONArray getApplicationsByJob(int employerId, int jobId) throws ExceptionHandler {
+        try (Connection connection = DbConnector.getConnection()) {
+            // Assuming you have a table named applications, adjust the SQL query accordingly
+            String sql = "SELECT a.applicationid, a.jobseekerid, a.submissiondate, a.coverletter, a.resumefilepath, u.username, u.email " +
+                    "FROM applications a " +
+                    "JOIN users u ON a.jobseekerid = u.userid " +
+                    "WHERE a.jobid = ? AND EXISTS (SELECT 1 FROM joblistings j WHERE j.jobid = ? AND j.employerid = ?)";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, jobId);
+                preparedStatement.setInt(2, jobId);
+                preparedStatement.setInt(3, employerId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    JSONArray applicationsArray = new JSONArray();
+
+                    while (resultSet.next()) {
+                        int applicationId = resultSet.getInt("applicationid");
+                        int jobSeekerId = resultSet.getInt("jobseekerid");
+                        String submissionDate = resultSet.getString("submissiondate");
+                        String coverLetter = resultSet.getString("coverletter");
+                        String resumeFilePath = resultSet.getString("resumefilepath");
+                        String jobSeekerUsername = resultSet.getString("username");
+                        String jobSeekerEmail = resultSet.getString("email");
+
+                        JSONObject applicationObject = new JSONObject();
+                        applicationObject.put("applicationId", applicationId);
+                        applicationObject.put("jobSeekerId", jobSeekerId);
+                        applicationObject.put("submissionDate", submissionDate);
+                        applicationObject.put("coverLetter", coverLetter);
+                        applicationObject.put("resumeFilePath", resumeFilePath);
+                        applicationObject.put("jobSeekerUsername", jobSeekerUsername);
+                        applicationObject.put("jobSeekerEmail", jobSeekerEmail);
+
+                        applicationsArray.put(applicationObject);
+                    }
+
+                    return applicationsArray;
+                }
+            }
+        } catch (SQLException e) {
+            throw new ExceptionHandler("Error retrieving applications by job ID and employer ID.", e);
+        }
+    }
 }

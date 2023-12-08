@@ -142,7 +142,7 @@ public class ApplicationEditServlet extends HttpServlet {
             JSONObject applicationDetails = applicationService.displayUpdatedApplication(jobSeekerId, jobId);
 
             if (applicationDetails != null) {
-                // Include application details in the success response
+                // Include application details in the success respons
                 JSONObject successResponse = new JSONObject();
                 successResponse.put("status", "success");
                 successResponse.put("message", "Job application edited successfully");

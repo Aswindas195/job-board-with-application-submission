@@ -107,4 +107,35 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
         }
         return jobPosts;
     }
+
+    public JSONArray getApplicationsByJob(int employerId, int jobId) {
+        JSONArray applicationsArray = new JSONArray();
+
+        if (employerJobList.containsKey(employerId) && employerJobList.get(employerId).contains(jobId)
+                && jobApplicationsList.containsKey(jobId)) {
+            for(int applicationId : jobApplicationsList.get(jobId)) {
+                JSONObject applicationObject = new JSONObject();
+                applicationObject.put("applicationId", applicationId);
+
+                if (applicationList.containsKey(applicationId)) {
+                    applicationObject.put("jobSeekerId", applicationList.get(applicationId).getJobseekerId());
+                    applicationObject.put("submissionDate", applicationList.get(applicationId).getSubmissionDate());
+                    applicationObject.put("coverLetter", applicationList.get(applicationId).getCoverLetter());
+                    applicationObject.put("resumeFilePath", applicationList.get(applicationId).getResumeFilePath());
+
+                    int jobSeekerId = applicationList.get(applicationId).getJobseekerId();
+
+                    // Assuming you have additional information in the user data structure
+                    if (userData.containsKey(jobSeekerId)) {
+                        applicationObject.put("jobSeekerUsername", userData.get(jobSeekerId).getName());
+                        applicationObject.put("jobSeekerEmail", userData.get(jobSeekerId).getEmail());
+                    }
+                }
+                applicationsArray.put(applicationObject);
+            }
+            }
+
+        return applicationsArray;
+    }
+
 }
