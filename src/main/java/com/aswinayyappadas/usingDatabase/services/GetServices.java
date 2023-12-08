@@ -13,7 +13,7 @@ import java.sql.SQLException;
 public class GetServices {
     public JSONObject getUserById(int userId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT username, email, usertype FROM users WHERE userid = ?";
+            String sql = "SELECT user_name, email, user_type FROM tbl_user WHERE id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, userId);
@@ -21,9 +21,9 @@ public class GetServices {
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
                         // Assuming you have a User class; adjust accordingly
-                        String username = resultSet.getString("username");
+                        String username = resultSet.getString("user_name");
                         String email = resultSet.getString("email");
-                        String userType = resultSet.getString("usertype");
+                        String userType = resultSet.getString("user_type");
 
                         // Construct a JSON object
 
@@ -43,7 +43,7 @@ public class GetServices {
 
     public JSONArray getJobPostsByEmployer(int employerId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT jobid, title, description, requirements, location FROM joblistings WHERE employerid = ?";
+            String sql = "SELECT id, title, industry, job_type, description, requirements, location FROM tbl_job_post WHERE employer_id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, employerId);
@@ -52,16 +52,20 @@ public class GetServices {
                     JSONArray jobPosts = new JSONArray();
 
                     while (resultSet.next()) {
-                        int jobId = resultSet.getInt("jobid");
+                        int jobId = resultSet.getInt("id");
                         String title = resultSet.getString("title");
+                        String location = resultSet.getString("location");
+                        String industry = resultSet.getString("industry");
+                        String jobType = resultSet.getString("job_type");
                         String description = resultSet.getString("description");
                         String requirements = resultSet.getString("requirements");
-                        String location = resultSet.getString("location");
 
                         // Construct a JSON object for each job post
                         JSONObject jobPost = new JSONObject()
                                 .put("jobId", jobId)
                                 .put("title", title)
+                                .put("industry", industry)
+                                .put("jobType", jobType)
                                 .put("description", description)
                                 .put("requirements", requirements)
                                 .put("location", location);
@@ -79,7 +83,7 @@ public class GetServices {
 
     public String getEmailByUserId(int userId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT email FROM users WHERE userid = ?";
+            String sql = "SELECT email FROM tbl_user WHERE id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, userId);
@@ -100,12 +104,12 @@ public class GetServices {
     public String getUserTypeByUserId(int userId) {
         // This assumes you have a database connection. Replace "yourDatabaseConnection" with your actual database connection.
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT usertype FROM users WHERE userid = ?";
+            String sql = "SELECT user_type FROM tbl_user WHERE id = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, userId);
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
-                        return resultSet.getString("usertype");
+                        return resultSet.getString("user_type");
                     }
                 }
             }
@@ -117,10 +121,10 @@ public class GetServices {
     }
     public JSONArray getAppliedJobsByJobSeeker(int jobSeekerId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT j.jobid, j.title, j.description, j.requirements, j.location, a.submissiondate, a.coverletter, a.resumefilepath " +
-                    "FROM joblistings j " +
-                    "JOIN applications a ON j.jobid = a.jobid " +
-                    "WHERE a.jobseekerid = ?";
+            String sql = "SELECT j.id, j.title, j.description, j.requirements, j.location, j.industry, j.job_type, a.date, a.cover_letter, a.resume_file_path " +
+                    "FROM tbl_job_post j " +
+                    "JOIN tbl_job_application a ON j.id = a.job_id " +
+                    "WHERE a.job_seeker_id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, jobSeekerId);
@@ -129,18 +133,22 @@ public class GetServices {
                     JSONArray appliedJobs = new JSONArray();
 
                     while (resultSet.next()) {
-                        int jobId = resultSet.getInt("jobid");
+                        int jobId = resultSet.getInt("id");
                         String title = resultSet.getString("title");
                         String description = resultSet.getString("description");
                         String requirements = resultSet.getString("requirements");
                         String location = resultSet.getString("location");
-                        String submissionDate = resultSet.getString("submissiondate");
-                        String coverLetter = resultSet.getString("coverletter");
-                        String resumeFilePath = resultSet.getString("resumefilepath");
+                        String industry = resultSet.getString("industry");
+                        String jobType = resultSet.getString("job_type");
+                        String submissionDate = resultSet.getString("date");
+                        String coverLetter = resultSet.getString("cover_letter");
+                        String resumeFilePath = resultSet.getString("resume_file_path");
 
                         // Construct a JSON object for each applied job
                         JSONObject appliedJob = new JSONObject()
                                 .put("jobId", jobId)
+                                .put("industry", industry)
+                                .put("jobType", jobType)
                                 .put("title", title)
                                 .put("description", description)
                                 .put("requirements", requirements)
@@ -164,21 +172,27 @@ public class GetServices {
         JSONArray jobListingsArray = new JSONArray();
 
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT jobid, title, description, location FROM joblistings";
+            String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql);
                  ResultSet resultSet = preparedStatement.executeQuery()) {
 
                 while (resultSet.next()) {
-                    int jobId = resultSet.getInt("jobid");
+                    int jobId = resultSet.getInt("id");
+                    String jobType = resultSet.getString("job_type");
+                    String industry = resultSet.getString("industry");
                     String title = resultSet.getString("title");
+                    String requirements = resultSet.getString("requirements");
                     String description = resultSet.getString("description");
                     String location = resultSet.getString("location");
 
                     JSONObject jobListingObject = new JSONObject();
                     jobListingObject.put("jobId", jobId);
+                    jobListingObject.put("industry", industry);
+                    jobListingObject.put("jobType", jobType);
                     jobListingObject.put("title", title);
                     jobListingObject.put("description", description);
+                    jobListingObject.put("requirements", requirements);
                     jobListingObject.put("location", location);
 
                     jobListingsArray.put(jobListingObject);
@@ -190,7 +204,7 @@ public class GetServices {
     }
     public JSONArray getJobsByLocation(String location) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT jobid, title, description, requirements FROM joblistings WHERE location = ?";
+            String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post WHERE location = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, location);
@@ -203,13 +217,18 @@ public class GetServices {
                         String title = resultSet.getString("title");
                         String description = resultSet.getString("description");
                         String requirements = resultSet.getString("requirements");
+                        String industry = resultSet.getString("industry");
+                        location = resultSet.getString("location");
+                        String jobType = resultSet.getString("job_type");
 
                         JSONObject jobListingObject = new JSONObject();
                         jobListingObject.put("jobId", jobId);
+                        jobListingObject.put("industry", industry);
+                        jobListingObject.put("jobType", jobType);
                         jobListingObject.put("title", title);
                         jobListingObject.put("description", description);
                         jobListingObject.put("requirements", requirements);
-
+                        jobListingObject.put("location", location);
                         jobListingsArray.put(jobListingObject);
                     }
 
@@ -222,7 +241,7 @@ public class GetServices {
     }
     public JSONArray getJobsByTitle(String title) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT jobid, title, description, requirements, location FROM joblistings WHERE title = ?";
+            String sql = "SELECT id, title, job_type, industry, description, requirements, location FROM tbl_job_post WHERE title = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, title);
@@ -231,8 +250,10 @@ public class GetServices {
                     JSONArray jobListingsArray = new JSONArray();
 
                     while (resultSet.next()) {
-                        int jobId = resultSet.getInt("jobid");
+                        int jobId = resultSet.getInt("id");
                         String jobTitle = resultSet.getString("title");
+                        String industry = resultSet.getString("industry");
+                        String jobType = resultSet.getString("job_type");
                         String description = resultSet.getString("description");
                         String requirements = resultSet.getString("requirements");
                         String location = resultSet.getString("location");
@@ -240,6 +261,8 @@ public class GetServices {
                         JSONObject jobListingObject = new JSONObject();
                         jobListingObject.put("jobId", jobId);
                         jobListingObject.put("title", jobTitle);
+                        jobListingObject.put("industry", industry);
+                        jobListingObject.put("jobType", jobType);
                         jobListingObject.put("description", description);
                         jobListingObject.put("requirements", requirements);
                         jobListingObject.put("location", location);
@@ -259,10 +282,10 @@ public class GetServices {
     public JSONArray getApplicationsByJob(int employerId, int jobId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             // Assuming you have a table named applications, adjust the SQL query accordingly
-            String sql = "SELECT a.applicationid, a.jobseekerid, a.submissiondate, a.coverletter, a.resumefilepath, u.username, u.email " +
-                    "FROM applications a " +
-                    "JOIN users u ON a.jobseekerid = u.userid " +
-                    "WHERE a.jobid = ? AND EXISTS (SELECT 1 FROM joblistings j WHERE j.jobid = ? AND j.employerid = ?)";
+            String sql = "SELECT a.id, a.job_seeker_id, a.date, a.cover_letter, a.resume_file_path, u.user_name, u.email " +
+                    "FROM tbl_job_application a " +
+                    "JOIN users u ON a.job_seeker_id = u.user_id " +
+                    "WHERE a.job_id = ? AND EXISTS (SELECT 1 FROM tbl_job_post j WHERE j.id = ? AND j.employer_id = ?)";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, jobId);
@@ -273,12 +296,12 @@ public class GetServices {
                     JSONArray applicationsArray = new JSONArray();
 
                     while (resultSet.next()) {
-                        int applicationId = resultSet.getInt("applicationid");
-                        int jobSeekerId = resultSet.getInt("jobseekerid");
-                        String submissionDate = resultSet.getString("submissiondate");
-                        String coverLetter = resultSet.getString("coverletter");
-                        String resumeFilePath = resultSet.getString("resumefilepath");
-                        String jobSeekerUsername = resultSet.getString("username");
+                        int applicationId = resultSet.getInt("id");
+                        int jobSeekerId = resultSet.getInt("job_seeker_id");
+                        String submissionDate = resultSet.getString("date");
+                        String coverLetter = resultSet.getString("cover_letter");
+                        String resumeFilePath = resultSet.getString("resume_file_path");
+                        String jobSeekerUsername = resultSet.getString("user_name");
                         String jobSeekerEmail = resultSet.getString("email");
 
                         JSONObject applicationObject = new JSONObject();

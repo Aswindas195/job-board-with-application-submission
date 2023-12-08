@@ -18,7 +18,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/job-post/employer/*")
+@WebServlet("/api/employer/job/post")
 public class JobPostServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -42,15 +42,26 @@ public class JobPostServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
-            // Extract employerId from the URL
-            String[] pathInfo = request.getPathInfo().split("/");
-            if (pathInfo.length != 2 || !pathInfo[1].matches("\\d+")) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid URL format.\"}");
-                return;
-            }
-            int employerId = Integer.parseInt(pathInfo[1]);
 
+            // Read JSON data from the request body
+            BufferedReader reader = request.getReader();
+            StringBuilder jsonBody = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                jsonBody.append(line);
+            }
+
+            // Parse JSON data
+            JSONObject jsonData = new JSONObject(jsonBody.toString());
+
+            // Extract job post data from JSON
+            int employerId = jsonData.getInt("employerId");
+            String industry = jsonData.getString("industry");
+            String jobType = jsonData.getString("jobType");
+            String jobTitle = jsonData.getString("jobTitle");
+            String jobDescription = jsonData.getString("jobDescription");
+            String requirements = jsonData.getString("requirements");
+            String location = jsonData.getString("location");
             // Validate employerId
             if (!validityCheckingService.isValidEmployerId(employerId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -77,26 +88,9 @@ public class JobPostServlet extends HttpServlet {
                 return;
             }
 
-            // Read JSON data from the request body
-            BufferedReader reader = request.getReader();
-            StringBuilder jsonBody = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                jsonBody.append(line);
-            }
-
-            // Parse JSON data
-            JSONObject jsonData = new JSONObject(jsonBody.toString());
-
-            // Extract job post data from JSON
-            String jobTitle = jsonData.getString("jobTitle");
-            String jobDescription = jsonData.getString("jobDescription");
-            String requirements = jsonData.getString("requirements");
-            String location = jsonData.getString("location");
-
             try {
                 // Attempt to post the job
-                int jobPostId = jobListingService.postJob(employerId, jobTitle, jobDescription, requirements, location);
+                int jobPostId = jobListingService.postJob(employerId, industry, jobType,jobTitle, jobDescription, requirements, location);
                 // You can add more information in the response if needed
                 out.println("{\"status\": \"success\", \"message\": \"Job posted successfully.\", \"jobPostId\": " + jobPostId + "}");
             } catch (ExceptionHandler e) {

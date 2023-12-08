@@ -14,7 +14,7 @@ import org.json.JSONArray;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/view-job-posts/employer/*")
+@WebServlet("/api/employer/job/post/view")
 public class ViewJobPostsServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -38,16 +38,8 @@ public class ViewJobPostsServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
-            // Extract employerId from the URL
-            String[] pathInfo = request.getPathInfo().split("/");
-            if (pathInfo.length != 2 || !pathInfo[1].matches("\\d+")) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid URL format.\"}");
-                return;
-            }
-
-            int employerId = Integer.parseInt(pathInfo[1]);
-
+            // Get query parameter for employer id
+            int employerId = Integer.parseInt(request.getParameter("employerId"));
             // Validate employerId
             if (!validityCheckingService.isValidEmployerId(employerId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

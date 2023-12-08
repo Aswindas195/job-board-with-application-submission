@@ -31,7 +31,7 @@ public class UserManager {
             // Hash the password using BCrypt
             String hashedPassword = BCrypt.hashpw(password, salt);
 
-            String sql = "INSERT INTO users (username, email, passwordhash, usertype, salt) VALUES (?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO tbl_user (user_name, email, password_hash, user_type, salt) VALUES (?, ?, ?, ?, ?)";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 preparedStatement.setString(1, username);
@@ -66,7 +66,7 @@ public class UserManager {
 
     private boolean isEmailExists(String email) {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT COUNT(*) FROM users WHERE email = ?";
+            String sql = "SELECT COUNT(*) FROM tbl_user WHERE email = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, email);
@@ -86,15 +86,15 @@ public class UserManager {
     }
     public int authenticateUserAndGetId(String email, String password) {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT userid, passwordhash, salt FROM users WHERE email = ?";
+            String sql = "SELECT id, password_hash, salt FROM tbl_user WHERE email = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, email);
 
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
-                        int userId = resultSet.getInt("userid");
-                        String storedPasswordHash = resultSet.getString("passwordhash");
+                        int userId = resultSet.getInt("id");
+                        String storedPasswordHash = resultSet.getString("password_hash");
                         String salt = resultSet.getString("salt");
 
                         // Validate the password by rehashing the entered password with the stored salt
@@ -117,7 +117,7 @@ public class UserManager {
     }
     public boolean logoutUser(int userId) {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "UPDATE users SET jwt_secret_key = NULL WHERE userid = ?";
+            String sql = "UPDATE tbl_user SET jwt_secret_key = NULL WHERE id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, userId);

@@ -33,7 +33,7 @@ public class ApplicationService {
             String coverLetter = ApplicationUtils.generateCoverLetter();
 
             // Your existing code for applying for a job
-            String sql = "INSERT INTO applications (jobseekerid, jobid, resumefilepath, coverletter, submissiondate) " +
+            String sql = "INSERT INTO tbl_job_application (job_seeker_id, job_id, resume_file_path, cover_letter, date) " +
                     "VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP) RETURNING *";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -47,12 +47,12 @@ public class ApplicationService {
                 if (resultSet.next()) {
                     // Application successful, create a JSON object with all fields
                     JSONObject applicationDetails = new JSONObject();
-                    applicationDetails.put("applicationId", resultSet.getInt("applicationid"));
-                    applicationDetails.put("jobSeekerId", resultSet.getInt("jobseekerid"));
-                    applicationDetails.put("jobId", resultSet.getInt("jobid"));
-                    applicationDetails.put("resumeFilePath", resultSet.getString("resumefilepath"));
-                    applicationDetails.put("coverLetter", resultSet.getString("coverletter"));
-                    applicationDetails.put("submissionDate", resultSet.getTimestamp("submissiondate").toString());
+                    applicationDetails.put("applicationId", resultSet.getInt("id"));
+                    applicationDetails.put("jobSeekerId", resultSet.getInt("job_seeker_id"));
+                    applicationDetails.put("jobId", resultSet.getInt("job_id"));
+                    applicationDetails.put("resumeFilePath", resultSet.getString("resume_file_path"));
+                    applicationDetails.put("coverLetter", resultSet.getString("cover_letter"));
+                    applicationDetails.put("submissionDate", resultSet.getTimestamp("date").toString());
                     // Add other fields as needed
 
                     return applicationDetails;
@@ -69,7 +69,7 @@ public class ApplicationService {
 
     public boolean hasUserAppliedForJob(int jobSeekerId, int jobId) {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT COUNT(*) FROM applications WHERE jobseekerid = ? AND jobid = ?";
+            String sql = "SELECT COUNT(*) FROM tbl_job_application WHERE job_seeker_id = ? AND job_id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, jobSeekerId);
@@ -89,7 +89,7 @@ public class ApplicationService {
         return false; // Default to false in case of an exception
     }
     public void deleteApplicationsForJob(Connection connection, int jobId) throws SQLException {
-        String deleteApplicationsSql = "DELETE FROM applications WHERE jobid = ?";
+        String deleteApplicationsSql = "DELETE FROM tbl_job_application WHERE job_id = ?";
 
         try (PreparedStatement preparedStatement = connection.prepareStatement(deleteApplicationsSql)) {
             preparedStatement.setInt(1, jobId);
@@ -103,7 +103,7 @@ public class ApplicationService {
         }
 
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "UPDATE applications SET coverletter = ? WHERE jobseekerid = ? AND jobid = ? RETURNING coverletter";
+            String sql = "UPDATE tbl_job_application SET cover_letter = ? WHERE job_seeker_id = ? AND job_id = ? RETURNING cover_letter";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, newCoverLetter);
@@ -112,7 +112,7 @@ public class ApplicationService {
 
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
-                        return resultSet.getString("coverletter");
+                        return resultSet.getString("cover_letter");
                     } else {
                         throw new ExceptionHandler("Application not found or not authorized to update the cover letter.");
                     }
@@ -130,7 +130,7 @@ public class ApplicationService {
         }
 
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "UPDATE applications SET resumefilepath = ? WHERE jobseekerid = ? AND jobid = ? RETURNING resumefilepath";
+            String sql = "UPDATE tbl_job_application SET resume_file_path = ? WHERE job_seeker_id = ? AND job_id = ? RETURNING resume_file_path";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, newResumeFilePath);
@@ -139,7 +139,7 @@ public class ApplicationService {
 
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
-                        return resultSet.getString("resumefilepath");
+                        return resultSet.getString("resume_file_path");
                     } else {
                         throw new ExceptionHandler("Application not found or not authorized to update the resume file path.");
                     }
@@ -158,7 +158,7 @@ public class ApplicationService {
 
         try (Connection connection = DbConnector.getConnection()) {
             // Your SQL query to delete the job application
-            String sql = "DELETE FROM applications WHERE jobseekerid = ? AND jobid = ?";
+            String sql = "DELETE FROM tbl_job_application WHERE job_seeker_id = ? AND job_id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, jobSeekerId);
@@ -185,7 +185,7 @@ public class ApplicationService {
 
         try (Connection connection = DbConnector.getConnection()) {
             // Your SQL query to retrieve the edited application details
-            String sql = "SELECT * FROM applications WHERE jobseekerid = ? AND jobid = ?";
+            String sql = "SELECT * FROM tbl_job_application WHERE job_seeker_id = ? AND job_id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, jobSeekerId);
@@ -195,12 +195,12 @@ public class ApplicationService {
                     if (resultSet.next()) {
                         // Application details found, create a JSON object with all fields
                         JSONObject applicationDetails = new JSONObject();
-                        applicationDetails.put("applicationId", resultSet.getInt("applicationid"));
-                        applicationDetails.put("jobSeekerId", resultSet.getInt("jobseekerid"));
-                        applicationDetails.put("jobId", resultSet.getInt("jobid"));
-                        applicationDetails.put("resumeFilePath", resultSet.getString("resumefilepath"));
-                        applicationDetails.put("coverLetter", resultSet.getString("coverletter"));
-                        applicationDetails.put("submissionDate", resultSet.getTimestamp("submissiondate").toString());
+                        applicationDetails.put("applicationId", resultSet.getInt("id"));
+                        applicationDetails.put("jobSeekerId", resultSet.getInt("job_seeker_id"));
+                        applicationDetails.put("jobId", resultSet.getInt("job_id"));
+                        applicationDetails.put("resumeFilePath", resultSet.getString("resume_file_path"));
+                        applicationDetails.put("coverLetter", resultSet.getString("cover_letter"));
+                        applicationDetails.put("submissionDate", resultSet.getTimestamp("date").toString());
                         // Add other fields as needed
 
                         return applicationDetails;

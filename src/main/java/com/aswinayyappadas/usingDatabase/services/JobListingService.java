@@ -16,18 +16,20 @@ public class JobListingService {
         this.mapperService = new MapperService();
     }
 
-    public int postJob(int employerId, String jobTitle, String jobDescription, String requirements, String location)
+    public int postJob(int employerId, String industry, String jobType ,String jobTitle, String jobDescription, String requirements, String location)
             throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "INSERT INTO joblistings (employerid, title, description, requirements, location) " +
-                    "VALUES (?, ?, ?, ?, ?)";
+            String sql = "INSERT INTO tbl_job_post (employer_id, industry, job_type, title, description, requirements, location) " +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 preparedStatement.setInt(1, employerId);
-                preparedStatement.setString(2, jobTitle);
-                preparedStatement.setString(3, jobDescription);
-                preparedStatement.setString(4, requirements);
-                preparedStatement.setString(5, location);
+                preparedStatement.setString(2, industry);
+                preparedStatement.setString(3, jobType);
+                preparedStatement.setString(4, jobTitle);
+                preparedStatement.setString(5, jobDescription);
+                preparedStatement.setString(6, requirements);
+                preparedStatement.setString(7, location);
 
                 int rowsAffected = preparedStatement.executeUpdate();
 
@@ -55,7 +57,7 @@ public class JobListingService {
             applicationService.deleteApplicationsForJob(connection, jobId);
 
             // Delete the job from the joblistings table
-            String sql = "DELETE FROM joblistings WHERE employerid = ? AND jobid = ?";
+            String sql = "DELETE FROM tbl_job_post WHERE employer_id = ? AND id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, employerId);
@@ -81,7 +83,7 @@ public class JobListingService {
         }
 
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "UPDATE joblistings SET requirements = ? WHERE employerid = ? AND jobid = ? RETURNING requirements";
+            String sql = "UPDATE tbl_job_post SET requirements = ? WHERE employer_id = ? AND id = ? RETURNING requirements";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, newRequirements);
@@ -103,7 +105,7 @@ public class JobListingService {
     }
     public String updateJobLocation(int employerId, int jobId, String newLocation) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "UPDATE joblistings SET location = ? WHERE employerid = ? AND jobid = ? RETURNING location";
+            String sql = "UPDATE tbl_job_post SET location = ? WHERE employer_id = ? AND id = ? RETURNING location";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, newLocation);
@@ -130,7 +132,7 @@ public class JobListingService {
 //        }
 
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "UPDATE joblistings SET description = ? WHERE employerid = ? AND jobid = ? RETURNING description";
+            String sql = "UPDATE tbl_job_post SET description = ? WHERE employer_id = ? AND id = ? RETURNING description";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, newJobDescription);

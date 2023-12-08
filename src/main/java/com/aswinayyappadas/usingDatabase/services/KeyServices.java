@@ -10,7 +10,7 @@ import java.sql.SQLException;
 public class KeyServices {
     public void storeSecretKeyByEmail(String email, String secretKey) throws SQLException {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "UPDATE users SET jwt_secret_key = ? WHERE email = ?";
+            String sql = "UPDATE tbl_user SET jwt_secret_key = ? WHERE email = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, secretKey);
@@ -22,7 +22,7 @@ public class KeyServices {
     }
     public String getJwtSecretKeyByEmail(String email) throws SQLException {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT jwt_secret_key FROM users WHERE email = ?";
+            String sql = "SELECT jwt_secret_key FROM tbl_user WHERE email = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, email);

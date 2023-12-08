@@ -17,14 +17,14 @@ public class ValidityCheckingService {
 
     public boolean isValidEmployerId(int employerId) {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT usertype FROM users WHERE userId = ?";
+            String sql = "SELECT user_type FROM tbl_user WHERE Id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, employerId);
 
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
-                        String userType = resultSet.getString("usertype");
+                        String userType = resultSet.getString("user_type");
                         return "employer".equalsIgnoreCase(userType);
                     } else {
                         return false; // User not found
@@ -39,14 +39,14 @@ public class ValidityCheckingService {
 
     public boolean isValidJobSeekerId(int jobSeekerId) {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT usertype FROM users WHERE userid = ?";
+            String sql = "SELECT user_type FROM tbl_user WHERE id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, jobSeekerId);
 
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
-                        String userType = resultSet.getString("usertype");
+                        String userType = resultSet.getString("user_type");
                         return "job_seeker".equalsIgnoreCase(userType);
                     } else {
                         return false; // User not found
@@ -61,7 +61,7 @@ public class ValidityCheckingService {
 
     public boolean isValidUserId(int userId) {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT COUNT(*) FROM users WHERE userId = ?";
+            String sql = "SELECT COUNT(*) FROM tbl_user WHERE Id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, userId);
@@ -84,7 +84,7 @@ public class ValidityCheckingService {
 
     public boolean isValidJobId(int jobId) {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT COUNT(*) FROM joblistings WHERE jobid = ?";
+            String sql = "SELECT COUNT(*) FROM tbl_job_post WHERE id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, jobId);
