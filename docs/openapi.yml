@@ -268,9 +268,10 @@ paths:
                 status: error
                 message: Internal Server Error
 
-  /api/edit-job/employer/{employerId}/job/{jobId}:
+  /api/edit-job/employer/{employerId}/requirements/job/{jobId}:
     put:
-      summary: Edit a specific job for an employer
+      summary: Update Job Requirements
+      description: Updates the requirements for a specific job post.
       tags:
         - Employer APIs
       parameters:
@@ -283,62 +284,179 @@ paths:
         - name: jobId
           in: path
           required: true
-          description: ID of the job
+          description: ID of the job post
           schema:
             type: integer
       requestBody:
+        description: JSON body with new requirements
         required: true
         content:
           application/json:
-            schema:
-              type: object
-              properties:
-                description:
-                  type: string
-                  description: Updated job description
-                location:
-                  type: string
-                  description: Updated job location
-                requirements:
-                  type: string
-                  description: Updated job requirements
+            example:
+              requirements: "Java, Python, HTML, CSS"
       responses:
-        "200":
-          description: Job details updated successfully
+        '200':
+          description: Successful operation
           content:
             application/json:
               example:
                 status: success
-                message: Job details updated successfully.
-                updatedData: "Updated description"
-        "400":
-          description: Bad request or validation error
+                message: Job requirements updated successfully.
+                updatedData: "Java, Python, HTML, CSS"
+        '400':
+          description: Bad request
           content:
             application/json:
               example:
                 status: error
-                message: Invalid request.
-        "401":
+                message: Invalid employer ID, job ID, or invalid input format
+        '401':
           description: Unauthorized
           content:
             application/json:
               example:
                 status: error
-                message: Unauthorized. Invalid or missing token.
-        "403":
+                message: Unauthorized. Invalid employer ID, job ID, or missing token
+        '403':
           description: Forbidden
           content:
             application/json:
               example:
                 status: error
-                message: Job not mapped to the employer.
-        "500":
-          description: Internal server error
+                message: Job not mapped to the employer
+        '500':
+          description: Internal Server Error
           content:
             application/json:
               example:
                 status: error
-                message: Internal server error.
+                message: Internal Server Error
+  /api/edit-job/employer/{employerId}/description/job/{jobId}:
+    put:
+      summary: Update Job Description
+      description: Updates the description for a specific job post.
+      tags:
+        - Employer APIs
+      parameters:
+        - name: employerId
+          in: path
+          required: true
+          description: ID of the employer
+          schema:
+            type: integer
+        - name: jobId
+          in: path
+          required: true
+          description: ID of the job post
+          schema:
+            type: integer
+      requestBody:
+        description: JSON body with new description
+        required: true
+        content:
+          application/json:
+            example:
+              description: "Exciting opportunity for a software developer."
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              example:
+                status: success
+                message: Job description updated successfully.
+                updatedData: "Exciting opportunity for a software developer."
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid employer ID, job ID, or invalid input format
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              example:
+                status: error
+                message: Unauthorized. Invalid employer ID, job ID, or missing token
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              example:
+                status: error
+                message: Job not mapped to the employer
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              example:
+                status: error
+                message: Internal Server Error
+  /api/edit-job/employer/{employerId}/location/job/{jobId}:
+    put:
+      summary: Update Job Location
+      description: Updates the location for a specific job post.
+      tags:
+        - Employer APIs
+      parameters:
+        - name: employerId
+          in: path
+          required: true
+          description: ID of the employer
+          schema:
+            type: integer
+        - name: jobId
+          in: path
+          required: true
+          description: ID of the job post
+          schema:
+            type: integer
+      requestBody:
+        description: JSON body with new location
+        required: true
+        content:
+          application/json:
+            example:
+              location: "City Name"
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              example:
+                status: success
+                message: Job location updated successfully.
+                updatedData: "City Name"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid employer ID, job ID, or invalid input format
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              example:
+                status: error
+                message: Unauthorized. Invalid employer ID, job ID, or missing token
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              example:
+                status: error
+                message: Job not mapped to the employer
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              example:
+                status: error
+                message: Internal Server Error
 
   /api/view-job-posts/employer/{employerId}:
     get:
@@ -788,9 +906,11 @@ paths:
               example:
                 status: error
                 message: Internal server error.
-  /api/edit-application/jobSeeker/{jobSeekerId}/{detailType}/job/{jobId}:
+
+  /api/edit-application/jobSeeker/{jobSeekerId}/coverletter/job/{jobId}:
     put:
-      summary: Edit a job seeker's application details
+      summary: Update Cover Letter for Job Application
+      description: Updates the cover letter of a job application for a job seeker.
       tags:
         - Jobseeker APIs
       parameters:
@@ -800,68 +920,113 @@ paths:
           description: ID of the job seeker
           schema:
             type: integer
-        - name: detailType
-          in: path
-          required: true
-          description: Type of application detail to edit (e.g., 'coverletter', 'resumefilepath')
-          schema:
-            type: string
         - name: jobId
           in: path
           required: true
-          description: ID of the job
+          description: ID of the job post
           schema:
             type: integer
       requestBody:
+        description: JSON body with new cover letter
         required: true
         content:
           application/json:
-            schema:
-              type: object
-              properties:
-                coverletter:
-                  type: string
-                  description: Updated cover letter text
-                resumefilepath:
-                  type: string
-                  description: Updated resume file path
-              required:
-                - coverletter
-                - resumefilepath
+            example: {"coverletter": "I am interested in this position..."}
       responses:
-        "200":
-          description: Application details updated successfully
+        '200':
+          description: Successful operation
           content:
             application/json:
               example:
                 status: success
-                message: Application details updated successfully.
-                updatedData: "/path/to/new/resume"
-        "400":
-          description: Bad request or validation error
+                message: Cover letter updated successfully
+        '400':
+          description: Bad request
           content:
             application/json:
               example:
                 status: error
-                message: Invalid request.
-        "401":
+                message: Invalid job seeker ID, job ID, or invalid input format
+        '401':
           description: Unauthorized
           content:
             application/json:
               example:
                 status: error
-                message: Unauthorized. Invalid or missing token.
-        "403":
+                message: Unauthorized. Invalid job seeker ID, job ID, or missing token
+        '403':
           description: Forbidden
           content:
             application/json:
               example:
                 status: error
-                message: Application not mapped to the job seeker.
-        "500":
-          description: Internal server error
+                message: Application not mapped to the job seeker
+        '500':
+          description: Internal Server Error
           content:
             application/json:
               example:
                 status: error
-                message: Internal server error.
+                message: Internal Server Error
+
+  /api/edit-application/jobSeeker/{jobSeekerId}/resumefilepath/job/{jobId}:
+    put:
+      summary: Update Resume File Path for Job Application
+      description: Updates the resume file path of a job application for a job seeker.
+      tags:
+        - Jobseeker APIs
+      parameters:
+        - name: jobSeekerId
+          in: path
+          required: true
+          description: ID of the job seeker
+          schema:
+            type: integer
+        - name: jobId
+          in: path
+          required: true
+          description: ID of the job post
+          schema:
+            type: integer
+      requestBody:
+        description: JSON body with new resume file path
+        required: true
+        content:
+          application/json:
+            example: {"resumefilepath": "/path/to/new/resume.pdf"}
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              example:
+                status: success
+                message: Resume file path updated successfully
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid job seeker ID, job ID, or invalid input format
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              example:
+                status: error
+                message: Unauthorized. Invalid job seeker ID, job ID, or missing token
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              example:
+                status: error
+                message: Application not mapped to the job seeker
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              example:
+                status: error
+                message: Internal Server Error
