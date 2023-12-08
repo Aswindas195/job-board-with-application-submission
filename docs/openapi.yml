@@ -207,6 +207,8 @@ paths:
   /api/view-applications/employer/{employerId}/job/{jobId}:
     get:
       summary: View Applications for Job Post
+      tags:
+        - Employer APIs
       description: Retrieves applications for a specific job post by an employer.
       parameters:
         - name: employerId
