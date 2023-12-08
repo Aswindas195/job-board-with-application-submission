@@ -204,6 +204,68 @@ paths:
                 status: error
                 message: Internal server error.
 
+  /api/view-applications/employer/{employerId}/job/{jobId}:
+    get:
+      summary: View Applications for Job Post
+      description: Retrieves applications for a specific job post by an employer.
+      parameters:
+        - name: employerId
+          in: path
+          required: true
+          description: ID of the employer
+          schema:
+            type: integer
+        - name: jobId
+          in: path
+          required: true
+          description: ID of the job post
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              example:
+                status: success
+                message: Applications retrieved successfully
+                data:
+                  - applicationId: 1
+                    jobSeekerId: 101
+                    submissionDate: "2023-01-01"
+                    coverLetter: "I am interested in this position..."
+                    resumeFilePath: "/path/to/resume.pdf"
+                    jobSeekerUsername: "jobseeker1"
+                    jobSeekerEmail: "jobseeker1@example.com"
+                  - applicationId: 2
+                    jobSeekerId: 102
+                    submissionDate: "2023-01-02"
+                    coverLetter: "I have relevant experience in..."
+                    resumeFilePath: "/path/to/resume2.pdf"
+                    jobSeekerUsername: "jobseeker2"
+                    jobSeekerEmail: "jobseeker2@example.com"
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid employer ID or job ID
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              example:
+                status: error
+                message: Unauthorized. Employer is not mapped to the job
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              example:
+                status: error
+                message: Internal Server Error
+
   /api/edit-job/employer/{employerId}/job/{jobId}:
     put:
       summary: Edit a specific job for an employer
