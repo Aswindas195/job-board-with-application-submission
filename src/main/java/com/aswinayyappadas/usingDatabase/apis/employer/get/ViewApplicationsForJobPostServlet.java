@@ -15,7 +15,7 @@ import org.json.JSONArray;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/view-applications/employer/*")
+@WebServlet("/api/view-applications")
 public class ViewApplicationsForJobPostServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -41,6 +41,9 @@ public class ViewApplicationsForJobPostServlet extends HttpServlet {
 
         try {
             // Extract employerId and jobId from the URL
+            String path = request.getPathInfo();
+            String param1 = request.getParameter("employerId");
+            String param2 = request.getParameter("jobId");
             String[] pathInfo = request.getPathInfo().split("/");
             if (pathInfo.length != 4 || !pathInfo[1].matches("\\d+") || !pathInfo[3].matches("\\d+")) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

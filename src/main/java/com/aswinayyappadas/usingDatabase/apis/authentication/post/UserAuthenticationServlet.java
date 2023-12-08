@@ -104,7 +104,7 @@ public class UserAuthenticationServlet extends HttpServlet {
         return validationErrors;
     }
 
-    private String generateJwtToken(String email) {
+    String generateJwtToken(String email) {
         Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
         String secretKeyString = Base64.getUrlEncoder().withoutPadding().encodeToString(key.getEncoded());
 
