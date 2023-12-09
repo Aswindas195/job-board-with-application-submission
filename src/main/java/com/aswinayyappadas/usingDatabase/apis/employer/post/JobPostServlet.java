@@ -18,7 +18,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/employer/job/post")
+@WebServlet("/api/employer/job-post")
 public class JobPostServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 

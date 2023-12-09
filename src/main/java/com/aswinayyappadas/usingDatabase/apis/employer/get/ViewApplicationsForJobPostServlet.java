@@ -15,7 +15,7 @@ import org.json.JSONArray;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/employer/application/view")
+@WebServlet("/api/employer/job-applications/view")
 public class ViewApplicationsForJobPostServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -40,19 +40,9 @@ public class ViewApplicationsForJobPostServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
-            // Extract employerId and jobId from the URL
-            String path = request.getPathInfo();
-            String param1 = request.getParameter("employerId");
-            String param2 = request.getParameter("jobId");
-            String[] pathInfo = request.getPathInfo().split("/");
-            if (pathInfo.length != 4 || !pathInfo[1].matches("\\d+") || !pathInfo[3].matches("\\d+")) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid URL format.\"}");
-                return;
-            }
-
-            int employerId = Integer.parseInt(pathInfo[1]);
-            int jobId = Integer.parseInt(pathInfo[3]);
+            // Extract employerId and jobId from the query parameter
+            int employerId = Integer.parseInt(request.getParameter("employerId"));
+            int jobId = Integer.parseInt(request.getParameter("jobId"));
 
             // Validate employerId and jobId
             if (!validityCheckingService.isValidEmployerId(employerId) || !validityCheckingService.isValidJobId(jobId)) {

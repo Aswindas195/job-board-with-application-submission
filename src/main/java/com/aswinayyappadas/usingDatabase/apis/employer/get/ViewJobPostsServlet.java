@@ -14,7 +14,7 @@ import org.json.JSONArray;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/employer/job/post/view")
+@WebServlet("/api/employer/job-posts/view")
 public class ViewJobPostsServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 

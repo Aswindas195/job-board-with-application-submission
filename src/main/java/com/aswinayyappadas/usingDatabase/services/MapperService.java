@@ -17,7 +17,7 @@ public class MapperService {
 
     public boolean isJobMappedToEmployer(int jobId, int employerId) {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT COUNT(*) FROM joblistings WHERE jobid = ? AND employerid = ?";
+            String sql = "SELECT COUNT(*) FROM tbl_job_post WHERE id = ? AND employer_id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, jobId);
@@ -38,7 +38,7 @@ public class MapperService {
     }
     public boolean isApplicationMappedToJobSeeker(int jobSeekerId, int jobId) {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT COUNT(*) FROM applications WHERE jobseekerid = ? AND jobid = ?";
+            String sql = "SELECT COUNT(*) FROM tbl_job_application WHERE job_seeker_id = ? AND job_id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, jobSeekerId);
@@ -60,7 +60,7 @@ public class MapperService {
 
     public boolean isEmployerMappedToJob(int employerId, int jobId) {
         try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT COUNT(*) FROM joblistings WHERE employerid = ? AND jobid = ?";
+            String sql = "SELECT COUNT(*) FROM tbl_job_post WHERE employer_id = ? AND id = ?";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setInt(1, employerId);
