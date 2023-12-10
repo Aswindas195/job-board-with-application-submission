@@ -16,7 +16,7 @@ public class JobListingService {
         this.mapperService = new MapperService();
     }
 
-    public int postJob(int employerId, String industry, String jobType ,String jobTitle, String jobDescription, String requirements, String location)
+    public int postJob(int employerId, int industry, int jobType ,String jobTitle, String jobDescription, String requirements, int location)
             throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "INSERT INTO tbl_job_post (employer_id, industry, job_type, title, description, requirements, location) " +
@@ -24,12 +24,12 @@ public class JobListingService {
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
                 preparedStatement.setInt(1, employerId);
-                preparedStatement.setString(2, industry);
-                preparedStatement.setString(3, jobType);
+                preparedStatement.setString(2, String.valueOf(industry));
+                preparedStatement.setString(3, String.valueOf(jobType));
                 preparedStatement.setString(4, jobTitle);
                 preparedStatement.setString(5, jobDescription);
                 preparedStatement.setString(6, requirements);
-                preparedStatement.setString(7, location);
+                preparedStatement.setString(7, String.valueOf(location));
 
                 int rowsAffected = preparedStatement.executeUpdate();
 
@@ -103,12 +103,12 @@ public class JobListingService {
             throw new ExceptionHandler("Error updating job requirements.", e);
         }
     }
-    public String updateJobLocation(int employerId, int jobId, String newLocation) throws ExceptionHandler {
+    public String updateJobLocation(int employerId, int jobId, int newLocation) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "UPDATE tbl_job_post SET location = ? WHERE employer_id = ? AND id = ? RETURNING location";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, newLocation);
+                preparedStatement.setString(1, String.valueOf(newLocation));
                 preparedStatement.setInt(2, employerId);
                 preparedStatement.setInt(3, jobId);
 
@@ -153,4 +153,49 @@ public class JobListingService {
         }
     }
 
+    public String updateJobType(int employerId, int jobId, int newJobType) throws ExceptionHandler {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "UPDATE tbl_job_post SET job_type = ? WHERE employer_id = ? AND id = ? RETURNING job_type";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, String.valueOf(newJobType));
+                preparedStatement.setInt(2, employerId);
+                preparedStatement.setInt(3, jobId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getString("job_type");
+                    } else {
+                        throw new ExceptionHandler("Job not found or not authorized to update the job.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logExceptions.logSQLExceptionDetails(e);
+            throw new ExceptionHandler("Error updating job type.", e);
+        }
+    }
+
+    public String updateIndustry(int employerId, int jobId, int newIndustry) throws ExceptionHandler {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "UPDATE tbl_job_post SET industry = ? WHERE employer_id = ? AND id = ? RETURNING industry";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, String.valueOf(newIndustry));
+                preparedStatement.setInt(2, employerId);
+                preparedStatement.setInt(3, jobId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return resultSet.getString("industry");
+                    } else {
+                        throw new ExceptionHandler("Job not found or not authorized to update the job.");
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            logExceptions.logSQLExceptionDetails(e);
+            throw new ExceptionHandler("Error updating industry.", e);
+        }
+    }
 }

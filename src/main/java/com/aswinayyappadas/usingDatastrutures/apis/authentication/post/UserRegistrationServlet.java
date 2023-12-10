@@ -54,7 +54,7 @@ public class UserRegistrationServlet extends HttpServlet {
             String username = jsonData.getString("username");
             String email = jsonData.getString("email");
             String password = jsonData.getString("password");
-            String usertype = jsonData.getString("usertype");
+            int usertype = jsonData.getInt("usertype");
 
             // Validate user input
             JSONObject validationErrors = new JSONObject();
@@ -82,7 +82,7 @@ public class UserRegistrationServlet extends HttpServlet {
             // Attempt to register the user
             //int userId = userManager.registerUser(username, email, password, usertype);
 
-            if(usertype.equals("Job_Seeker")) {
+            if(usertype == 1) {
                 userId = userManager.getValidUserId();
                 // Generate a secure salt for password hashing
                 String salt = BCrypt.gensalt();
@@ -92,7 +92,7 @@ public class UserRegistrationServlet extends HttpServlet {
                 userManager.addUser(userId, jobseeker);
                 userManager.addUserEmail(email, jobseeker);
             }
-            else if(usertype.equals("Employer")) {
+            else if(usertype == 2) {
                 userId = userManager.getValidUserId();
                 // Generate a secure salt for password hashing
                 String salt = BCrypt.gensalt();

@@ -1,10 +1,10 @@
 package com.aswinayyappadas.usingDatabase.apis.authentication.post;
 
-import com.aswinayyappadas.usingDatabase.services.GetServices;
-import com.aswinayyappadas.usingDatabase.services.KeyServices;
-import com.aswinayyappadas.usingDatabase.services.UserManager;
-import com.aswinayyappadas.usingDatabase.services.ValidityCheckingService;
-import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,88 +13,61 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-@WebServlet("/api/users/logout/*")
-public class UserLogoutServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-    private final UserManager userManager;
-    private final JwtTokenVerifier jwtTokenVerifier;
-    private final GetServices getServices;
-    private final ValidityCheckingService validityCheckingService;
-    private final KeyServices keyServices;
+import java.security.Key;
+import java.util.Base64;
+import java.util.Date;
 
-    public UserLogoutServlet() {
-        this.userManager = new UserManager();
-        this.getServices = new GetServices();
-        this.jwtTokenVerifier = new JwtTokenVerifier();
-        this.validityCheckingService = new ValidityCheckingService();
-        this.keyServices = new KeyServices();
-    }
+@WebServlet("/api/users/logout")
+public class UserLogoutServlet extends HttpServlet {
+
+    private static final long serialVersionUID = 1L;
+
+
+
+    // Obtain the secret key string from UserAuthenticationServlet
+    private String secretKeyString = UserAuthenticationServlet.getSecretKeyString();
+    private final Key key = Keys.hmacShaKeyFor(Base64.getUrlDecoder().decode(secretKeyString));
+
+
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
-        response.setContentType("application/json");
-        PrintWriter out = response.getWriter();
+        String authToken = request.getHeader("Authorization");
 
-        try {
-            // Extract userId from the URL
-            String[] pathInfo = request.getPathInfo().split("/");
-            if (pathInfo.length != 2 || !pathInfo[1].matches("\\d+")) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid URL format.\"}");
-                return;
-            }
-            int userId = Integer.parseInt(pathInfo[1]);
+        if (authToken != null && authToken.startsWith("Bearer ")) {
+            String token = authToken.substring(7); // Remove "Bearer " prefix
 
-            // Validate userId
-            if (!validityCheckingService.isValidUserId(userId)) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid User ID.\"}");
-                return;
-            }
+            // Optionally, you can validate the token's signature or perform other checks
+            Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            Claims claims = claimsJws.getBody();
 
-            // Extract other details from the path
-            String email = getServices.getEmailByUserId(userId);
-            String jwtSecretKey = keyServices.getJwtSecretKeyByEmail(email);
+            // Expire the token by setting its expiration date to a past time
+            Date expirationDate = new Date(0L); // Set to January 1, 1970, 00:00:00 GMT
 
-            // Check if jwtSecretKey is null
-            if (jwtSecretKey == null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. JWT secret key not found.\"}");
-                return;
-            }
+            // Build a new token with an expired expiration date
+            String expiredToken = Jwts.builder()
+                    .setClaims(claims)
+                    .setExpiration(expirationDate)
+                    .signWith(key, SignatureAlgorithm.HS256)
+                    .compact();
 
-            // Read JWT token from the Authorization header
-            String authToken = request.getHeader("Authorization");
-            if (authToken == null || !jwtTokenVerifier.verifyToken(authToken, email, jwtSecretKey)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
-                return;
-            }
+            // Prepare the JSON response with the new expired token
+            JSONObject jsonResponse = new JSONObject();
+            jsonResponse.put("status", "success");
+            jsonResponse.put("message", "Logout successful.");
+            jsonResponse.put("token", expiredToken);
 
-            try {
-                // Attempt to logout the user
-                boolean logoutSuccessful = userManager.logoutUser(userId);
-
-                if (logoutSuccessful) {
-                    // Logout successful
-                    JSONObject jsonResponse = new JSONObject();
-                    jsonResponse.put("status", "success");
-                    jsonResponse.put("message", "User logged out successfully.");
-                    out.println(jsonResponse.toString());
-                } else {
-                    // Database operation failed
-                    response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    out.println("{\"status\": \"error\", \"message\": \"Database operation failed.\"}");
-                }
-            } catch (Exception e) {
-                // Handle other exceptions if necessary
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                out.println("{\"status\": \"error\", \"message\": \"Internal server error.\"}");
-            }
-        } catch (Exception e) {
-            // Handle other exceptions if necessary
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            out.println("{\"status\": \"error\", \"message\": \"Invalid request.\"}");
+            // Send the JSON response
+            response.setStatus(HttpServletResponse.SC_OK);
+            response.setContentType("application/json");
+            PrintWriter out = response.getWriter();
+            out.println(jsonResponse.toString());
+        } else {
+            // Token not present or has an invalid format
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            PrintWriter out = response.getWriter();
+            out.println("{\"status\": \"error\", \"message\": \"Invalid or missing token.\"}");
         }
     }
 }

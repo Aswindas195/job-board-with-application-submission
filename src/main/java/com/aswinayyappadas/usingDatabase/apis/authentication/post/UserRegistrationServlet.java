@@ -52,7 +52,7 @@ public class UserRegistrationServlet extends HttpServlet {
             String username = jsonData.getString("username");
             String email = jsonData.getString("email");
             String password = jsonData.getString("password");
-            String usertype = jsonData.getString("usertype");
+            int usertype = jsonData.getInt("usertype");
 
             // Validate user input
             JSONObject validationErrors = new JSONObject();

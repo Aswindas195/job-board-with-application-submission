@@ -47,7 +47,7 @@ public class ValidityCheckingService {
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
                         String userType = resultSet.getString("user_type");
-                        return "job_seeker".equalsIgnoreCase(userType);
+                        return "Job Seeker".equalsIgnoreCase(userType);
                     } else {
                         return false; // User not found
                     }

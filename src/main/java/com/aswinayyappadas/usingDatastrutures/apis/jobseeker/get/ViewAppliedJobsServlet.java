@@ -63,12 +63,12 @@ public class ViewAppliedJobsServlet extends HttpServlet {
             }
 
             // Read JWT token from the Authorization header
-            String authToken = request.getHeader("Authorization");
-            if (authToken == null || !jwtTokenVerifier.verifyToken(authToken, email, jwtSecretKey)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
-                return;
-            }
+//            String authToken = request.getHeader("Authorization");
+//            if (authToken == null || !jwtTokenVerifier.verifyToken(authToken, email, jwtSecretKey)) {
+//                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
+//                return;
+//            }
 
             // Retrieve the applied jobs for the job seeker
             String appliedJobs = getServices.getAppliedJobsByJobSeeker(jobSeekerId).toString();

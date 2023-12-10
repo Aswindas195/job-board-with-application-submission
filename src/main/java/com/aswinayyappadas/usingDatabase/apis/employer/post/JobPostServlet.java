@@ -24,16 +24,14 @@ public class JobPostServlet extends HttpServlet {
 
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
-    private final GetServices getServices;
+
     private final JobListingService jobListingService;
-    private final KeyServices keyServices;
+
 
     public JobPostServlet() {
         this.validityCheckingService = new ValidityCheckingService();
-        this.getServices = new GetServices();
         this.jobListingService = new JobListingService();
         this.jwtTokenVerifier = new JwtTokenVerifier();
-        this.keyServices = new KeyServices();
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -42,7 +40,6 @@ public class JobPostServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
-
             // Read JSON data from the request body
             BufferedReader reader = request.getReader();
             StringBuilder jsonBody = new StringBuilder();
@@ -55,42 +52,35 @@ public class JobPostServlet extends HttpServlet {
             JSONObject jsonData = new JSONObject(jsonBody.toString());
 
             // Extract job post data from JSON
-            int employerId = jsonData.getInt("employerId");
-            String industry = jsonData.getString("industry");
-            String jobType = jsonData.getString("jobType");
+            int industry = jsonData.getInt("industry");
+            int jobType = jsonData.getInt("jobType");
             String jobTitle = jsonData.getString("jobTitle");
             String jobDescription = jsonData.getString("jobDescription");
             String requirements = jsonData.getString("requirements");
-            String location = jsonData.getString("location");
-            // Validate employerId
-            if (!validityCheckingService.isValidEmployerId(employerId)) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid employer ID.\"}");
-                return;
-            }
+            int location = jsonData.getInt("location");
 
-            // Extract other details from the path
-            String email = getServices.getEmailByUserId(employerId);
-            String jwtSecretKey = keyServices.getJwtSecretKeyByEmail(email);
-
-            // Check if jwtSecretKey is null
-            if (jwtSecretKey == null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. JWT secret key not found.\"}");
-                return;
-            }
-
-            // Read JWT token from the Authorization header
+            int userId = -1;
+            // Extreact user id from jwt
             String authToken = request.getHeader("Authorization");
-            if (authToken == null || !jwtTokenVerifier.verifyToken(authToken, email, jwtSecretKey)) {
+            if (authToken != null) {
+                userId = jwtTokenVerifier.extractUserId(authToken);
+            }
+            else if(userId == -1){
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
                 return;
             }
 
+            // Validate employerId
+            if (!validityCheckingService.isValidEmployerId(userId)) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.println("{\"status\": \"error\", \"message\": \"Invalid employer ID.\"}");
+                return;
+            }
+
             try {
                 // Attempt to post the job
-                int jobPostId = jobListingService.postJob(employerId, industry, jobType,jobTitle, jobDescription, requirements, location);
+                int jobPostId = jobListingService.postJob(userId, industry, jobType, jobTitle, jobDescription, requirements, location);
                 // You can add more information in the response if needed
                 out.println("{\"status\": \"success\", \"message\": \"Job posted successfully.\", \"jobPostId\": " + jobPostId + "}");
             } catch (ExceptionHandler e) {

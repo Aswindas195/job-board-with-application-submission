@@ -60,12 +60,12 @@ public class SearchJobsServlet extends HttpServlet{
             }
 
             // Read JWT token from the Authorization header
-            String authToken = request.getHeader("Authorization");
-            if (authToken == null || !jwtTokenVerifier.verifyToken(authToken, email, jwtSecretKey)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
-                return;
-            }
+//            String authToken = request.getHeader("Authorization");
+//            if (authToken == null || !jwtTokenVerifier.verifyToken(authToken, email, jwtSecretKey)) {
+//                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+//                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
+//                return;
+//            }
             // Check if jobseeker ID is valid
             if (!validityCheckingService.isValidJobSeekerId(jobSeekerId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

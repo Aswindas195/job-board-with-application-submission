@@ -18,7 +18,7 @@ public class UserManager {
         // Assuming you are using BCrypt for password hashing
         return BCrypt.hashpw(password, salt);
     }
-    public int registerUser(String username, String email, String password, String usertype) throws ExceptionHandler {
+    public int registerUser(String username, String email, String password, int usertype) throws ExceptionHandler {
         // Check if the email already exists in the database
         if (isEmailExists(email)) {
             throw new ExceptionHandler("Error registering user. Email already exists.");
@@ -37,7 +37,7 @@ public class UserManager {
                 preparedStatement.setString(1, username);
                 preparedStatement.setString(2, email);
                 preparedStatement.setString(3, hashedPassword);
-                preparedStatement.setString(4, usertype);
+                preparedStatement.setString(4, String.valueOf(usertype));
                 preparedStatement.setString(5, salt);
 
                 int rowsAffected = preparedStatement.executeUpdate();

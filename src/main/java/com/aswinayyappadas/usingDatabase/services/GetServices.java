@@ -213,7 +213,7 @@ public class GetServices {
                     JSONArray jobListingsArray = new JSONArray();
 
                     while (resultSet.next()) {
-                        int jobId = resultSet.getInt("jobid");
+                        int jobId = resultSet.getInt("id");
                         String title = resultSet.getString("title");
                         String description = resultSet.getString("description");
                         String requirements = resultSet.getString("requirements");
@@ -284,7 +284,7 @@ public class GetServices {
             // Assuming you have a table named applications, adjust the SQL query accordingly
             String sql = "SELECT a.id, a.job_seeker_id, a.date, a.cover_letter, a.resume_file_path, u.user_name, u.email " +
                     "FROM tbl_job_application a " +
-                    "JOIN users u ON a.job_seeker_id = u.user_id " +
+                    "JOIN tbl_user u ON a.job_seeker_id = u.id " +
                     "WHERE a.job_id = ? AND EXISTS (SELECT 1 FROM tbl_job_post j WHERE j.id = ? AND j.employer_id = ?)";
 
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
@@ -321,6 +321,251 @@ public class GetServices {
             }
         } catch (SQLException e) {
             throw new ExceptionHandler("Error retrieving applications by job ID and employer ID.", e);
+        }
+    }
+
+    public JSONArray getJobsByLocationIndustryType(String location, String industry, String jobType) throws ExceptionHandler {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post " +
+                    "WHERE location = ? AND industry = ? AND job_type = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, location);
+                preparedStatement.setString(2, industry);
+                preparedStatement.setString(3, jobType);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    JSONArray jobListingsArray = new JSONArray();
+
+                    while (resultSet.next()) {
+                        int jobId = resultSet.getInt("id");
+                        String jobTypeResult = resultSet.getString("job_type");
+                        String industryResult = resultSet.getString("industry");
+                        String title = resultSet.getString("title");
+                        String requirements = resultSet.getString("requirements");
+                        String description = resultSet.getString("description");
+                        String locationResult = resultSet.getString("location");
+
+                        JSONObject jobListingObject = new JSONObject();
+                        jobListingObject.put("jobId", jobId);
+                        jobListingObject.put("industry", industryResult);
+                        jobListingObject.put("jobType", jobTypeResult);
+                        jobListingObject.put("title", title);
+                        jobListingObject.put("description", description);
+                        jobListingObject.put("requirements", requirements);
+                        jobListingObject.put("location", locationResult);
+
+                        jobListingsArray.put(jobListingObject);
+                    }
+
+                    return jobListingsArray;
+                }
+            }
+        } catch (SQLException e) {
+            throw new ExceptionHandler("Error retrieving job listings by location, industry, and job type.", e);
+        }
+    }
+
+    public JSONArray getJobsByLocationIndustry(String location, String industry) throws ExceptionHandler {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post " +
+                    "WHERE location = ? AND industry = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, location);
+                preparedStatement.setString(2, industry);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    JSONArray jobListingsArray = new JSONArray();
+
+                    while (resultSet.next()) {
+                        int jobId = resultSet.getInt("id");
+                        String jobType = resultSet.getString("job_type");
+                        String industryResult = resultSet.getString("industry");
+                        String title = resultSet.getString("title");
+                        String requirements = resultSet.getString("requirements");
+                        String description = resultSet.getString("description");
+                        String locationResult = resultSet.getString("location");
+
+                        JSONObject jobListingObject = new JSONObject();
+                        jobListingObject.put("jobId", jobId);
+                        jobListingObject.put("industry", industryResult);
+                        jobListingObject.put("jobType", jobType);
+                        jobListingObject.put("title", title);
+                        jobListingObject.put("description", description);
+                        jobListingObject.put("requirements", requirements);
+                        jobListingObject.put("location", locationResult);
+
+                        jobListingsArray.put(jobListingObject);
+                    }
+
+                    return jobListingsArray;
+                }
+            }
+        } catch (SQLException e) {
+            throw new ExceptionHandler("Error retrieving job listings by location and industry.", e);
+        }
+    }
+
+    public JSONArray getJobsByLocationType(String location, String jobType) throws ExceptionHandler {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post " +
+                    "WHERE location = ? AND job_type = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, location);
+                preparedStatement.setString(2, jobType);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    JSONArray jobListingsArray = new JSONArray();
+
+                    while (resultSet.next()) {
+                        int jobId = resultSet.getInt("id");
+                        String jobTypeResult = resultSet.getString("job_type");
+                        String industry = resultSet.getString("industry");
+                        String title = resultSet.getString("title");
+                        String requirements = resultSet.getString("requirements");
+                        String description = resultSet.getString("description");
+                        String locationResult = resultSet.getString("location");
+
+                        JSONObject jobListingObject = new JSONObject();
+                        jobListingObject.put("jobId", jobId);
+                        jobListingObject.put("industry", industry);
+                        jobListingObject.put("jobType", jobTypeResult);
+                        jobListingObject.put("title", title);
+                        jobListingObject.put("description", description);
+                        jobListingObject.put("requirements", requirements);
+                        jobListingObject.put("location", locationResult);
+
+                        jobListingsArray.put(jobListingObject);
+                    }
+
+                    return jobListingsArray;
+                }
+            }
+        } catch (SQLException e) {
+            throw new ExceptionHandler("Error retrieving job listings by location and job type.", e);
+        }
+    }
+
+    public JSONArray getJobsByIndustryType(String industry, String jobType) throws ExceptionHandler {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post " +
+                    "WHERE industry = ? AND job_type = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, industry);
+                preparedStatement.setString(2, jobType);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    JSONArray jobListingsArray = new JSONArray();
+
+                    while (resultSet.next()) {
+                        int jobId = resultSet.getInt("id");
+                        String jobTypeResult = resultSet.getString("job_type");
+                        String industryResult = resultSet.getString("industry");
+                        String title = resultSet.getString("title");
+                        String requirements = resultSet.getString("requirements");
+                        String description = resultSet.getString("description");
+                        String location = resultSet.getString("location");
+
+                        JSONObject jobListingObject = new JSONObject();
+                        jobListingObject.put("jobId", jobId);
+                        jobListingObject.put("industry", industryResult);
+                        jobListingObject.put("jobType", jobTypeResult);
+                        jobListingObject.put("title", title);
+                        jobListingObject.put("description", description);
+                        jobListingObject.put("requirements", requirements);
+                        jobListingObject.put("location", location);
+
+                        jobListingsArray.put(jobListingObject);
+                    }
+
+                    return jobListingsArray;
+                }
+            }
+        } catch (SQLException e) {
+            throw new ExceptionHandler("Error retrieving job listings by industry and job type.", e);
+        }
+    }
+
+    public JSONArray getJobsByIndustry(String industry) throws ExceptionHandler {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post " +
+                    "WHERE industry = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, industry);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    JSONArray jobListingsArray = new JSONArray();
+
+                    while (resultSet.next()) {
+                        int jobId = resultSet.getInt("id");
+                        String jobType = resultSet.getString("job_type");
+                        String industryResult = resultSet.getString("industry");
+                        String title = resultSet.getString("title");
+                        String requirements = resultSet.getString("requirements");
+                        String description = resultSet.getString("description");
+                        String location = resultSet.getString("location");
+
+                        JSONObject jobListingObject = new JSONObject();
+                        jobListingObject.put("jobId", jobId);
+                        jobListingObject.put("industry", industryResult);
+                        jobListingObject.put("jobType", jobType);
+                        jobListingObject.put("title", title);
+                        jobListingObject.put("description", description);
+                        jobListingObject.put("requirements", requirements);
+                        jobListingObject.put("location", location);
+
+                        jobListingsArray.put(jobListingObject);
+                    }
+
+                    return jobListingsArray;
+                }
+            }
+        } catch (SQLException e) {
+            throw new ExceptionHandler("Error retrieving job listings by industry.", e);
+        }
+    }
+
+    public JSONArray getJobsByType(String jobType) throws ExceptionHandler {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post " +
+                    "WHERE job_type = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setString(1, jobType);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    JSONArray jobListingsArray = new JSONArray();
+
+                    while (resultSet.next()) {
+                        int jobId = resultSet.getInt("id");
+                        String jobTypeResult = resultSet.getString("job_type");
+                        String industry = resultSet.getString("industry");
+                        String title = resultSet.getString("title");
+                        String requirements = resultSet.getString("requirements");
+                        String description = resultSet.getString("description");
+                        String location = resultSet.getString("location");
+
+                        JSONObject jobListingObject = new JSONObject();
+                        jobListingObject.put("jobId", jobId);
+                        jobListingObject.put("industry", industry);
+                        jobListingObject.put("jobType", jobTypeResult);
+                        jobListingObject.put("title", title);
+                        jobListingObject.put("description", description);
+                        jobListingObject.put("requirements", requirements);
+                        jobListingObject.put("location", location);
+
+                        jobListingsArray.put(jobListingObject);
+                    }
+
+                    return jobListingsArray;
+                }
+            }
+        } catch (SQLException e) {
+            throw new ExceptionHandler("Error retrieving job listings by job type.", e);
         }
     }
 }

@@ -22,14 +22,13 @@ public class ViewApplicationsForJobPostServlet extends HttpServlet {
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
     private final GetServices getServices;
-    private final KeyServices keyServices;
+
     private final MapperService mapperService;
 
     public ViewApplicationsForJobPostServlet() {
         this.validityCheckingService = new ValidityCheckingService();
         this.getServices = new GetServices();
         this.jwtTokenVerifier = new JwtTokenVerifier();
-        this.keyServices = new KeyServices();
         this.mapperService = new MapperService();
     }
 
@@ -41,45 +40,38 @@ public class ViewApplicationsForJobPostServlet extends HttpServlet {
 
         try {
             // Extract employerId and jobId from the query parameter
-            int employerId = Integer.parseInt(request.getParameter("employerId"));
             int jobId = Integer.parseInt(request.getParameter("jobId"));
 
+            // Get query parameter for employer id
+            int userId = -1;
+            // Extreact user id from jwt
+            String authToken = request.getHeader("Authorization");
+            if (authToken != null) {
+                userId = jwtTokenVerifier.extractUserId(authToken);
+            }
+            else {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.println("{\"status\": \"error\", \"message\": \"Invalid employer ID or job ID.\"}");
+                return;
+            }
             // Validate employerId and jobId
-            if (!validityCheckingService.isValidEmployerId(employerId) || !validityCheckingService.isValidJobId(jobId)) {
+            if (!validityCheckingService.isValidEmployerId(userId) || !validityCheckingService.isValidJobId(jobId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.println("{\"status\": \"error\", \"message\": \"Invalid employer ID or job ID.\"}");
                 return;
             }
 
             // Check if employer is mapped to the job
-            if (!mapperService.isEmployerMappedToJob(employerId, jobId)) {
+            if (!mapperService.isEmployerMappedToJob(userId, jobId)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Employer is not mapped to the job.\"}");
                 return;
             }
 
-            // Extract other details from the path
-            String email = getServices.getEmailByUserId(employerId);
-            String jwtSecretKey = keyServices.getJwtSecretKeyByEmail(email);
-
-            // Check if jwtSecretKey is null
-            if (jwtSecretKey == null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. JWT secret key not found.\"}");
-                return;
-            }
-
-            // Read JWT token from the Authorization header
-            String authToken = request.getHeader("Authorization");
-            if (authToken == null || !jwtTokenVerifier.verifyToken(authToken, email, jwtSecretKey)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
-                return;
-            }
 
             try {
                 // Fetch applications for the given employerId and jobId
-                JSONArray applications = getServices.getApplicationsByJob(employerId, jobId);
+                JSONArray applications = getServices.getApplicationsByJob(userId, jobId);
 
                 // Return the applications as JSON
                 out.println(applications.toString());

@@ -15,20 +15,17 @@ import org.json.JSONArray;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/view-all-jobs/jobSeeker/*")
+@WebServlet("/api/jobSeeker/view-all-jobs")
 public class ViewAllJobsServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
     private final GetServices getServices;
-    private final KeyServices keyServices;
-
 
     public ViewAllJobsServlet() {
         this.getServices = new GetServices();
         this.validityCheckingService = new ValidityCheckingService();
         this.jwtTokenVerifier = new JwtTokenVerifier();
-        this.keyServices = new KeyServices();
     }
 
     @Override
@@ -37,39 +34,22 @@ public class ViewAllJobsServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
-            // Extract job seeker ID from the request parameters
-            String[] pathInfo = request.getPathInfo().split("/");
-            if (pathInfo.length != 2 || !pathInfo[1].matches("\\d+")) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid URL format.\"}");
-                return;
-            }
-
-            int jobSeekerId = Integer.parseInt(pathInfo[1]);
-
-            // Check if the job seeker ID is valid
-            if (!validityCheckingService.isValidJobSeekerId(jobSeekerId)) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid job seeker ID.\"}");
-                return;
-            }
-
-            // Extract other details from the path
-            String email = getServices.getEmailByUserId(jobSeekerId);
-            String jwtSecretKey = keyServices.getJwtSecretKeyByEmail(email);
-
-            // Check if jwtSecretKey is null
-            if (jwtSecretKey == null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. JWT secret key not found.\"}");
-                return;
-            }
-
-            // Read JWT token from the Authorization header
+            int userId = -1;
+            // Extreact user id from jwt
             String authToken = request.getHeader("Authorization");
-            if (authToken == null || !jwtTokenVerifier.verifyToken(authToken, email, jwtSecretKey)) {
+            if (authToken != null) {
+                userId = jwtTokenVerifier.extractUserId(authToken);
+            }
+            else if(userId == -1){
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
+                return;
+            }
+
+            // Check if the job seeker ID is valid
+            if (!validityCheckingService.isValidJobSeekerId(userId)) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.println("{\"status\": \"error\", \"message\": \"Invalid job seeker ID.\"}");
                 return;
             }
 

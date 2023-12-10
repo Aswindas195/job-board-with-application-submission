@@ -12,24 +12,22 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/job-apply/jobSeeker/*")
+@WebServlet("/api/jobSeeker/job-apply")
 public class JobApplyServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
-    private final GetServices getServices;
     private final ApplicationService applicationService;
-    private final KeyServices keyServices;
+
 
     public JobApplyServlet() {
         this.applicationService = new ApplicationService();
-        this.getServices = new GetServices();
         this.validityCheckingService = new ValidityCheckingService();
         this.jwtTokenVerifier = new JwtTokenVerifier();
-        this.keyServices = new KeyServices();
     }
 
     @Override
@@ -39,42 +37,39 @@ public class JobApplyServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
-            // Extract job seeker details and job ID from the request parameters
-            String[] pathInfo = request.getPathInfo().split("/");
-            if (pathInfo.length != 4 || !pathInfo[1].matches("\\d+") || !pathInfo[3].matches("\\d+")) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid URL format.\"}");
+            // Read JSON data from the request body
+            BufferedReader reader = request.getReader();
+            StringBuilder jsonBody = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                jsonBody.append(line);
+            }
+
+            // Parse JSON data
+            JSONObject jsonData = new JSONObject(jsonBody.toString());
+
+            // Extract job post data from JSON
+            int jobId = jsonData.getInt("jobId");
+
+            int userId = -1;
+            // Extreact user id from jwt
+            String authToken = request.getHeader("Authorization");
+            if (authToken != null) {
+                userId = jwtTokenVerifier.extractUserId(authToken);
+            }
+            else if(userId == -1){
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
                 return;
             }
 
-            int jobSeekerId = Integer.parseInt(pathInfo[1]);
-            int jobId = Integer.parseInt(pathInfo[3]);
-
             // Check if the job seeker ID is valid
-            if (!validityCheckingService.isValidJobSeekerId(jobSeekerId)) {
+            if (!validityCheckingService.isValidJobSeekerId(userId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.println("{\"status\": \"error\", \"message\": \"Invalid job seeker ID.\"}");
                 return;
             }
 
-            // Extract other details from the path
-            String email = getServices.getEmailByUserId(jobSeekerId);
-            String jwtSecretKey = keyServices.getJwtSecretKeyByEmail(email);
-
-            // Check if jwtSecretKey is null
-            if (jwtSecretKey == null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. JWT secret key not found.\"}");
-                return;
-            }
-
-            // Read JWT token from the Authorization header
-            String authToken = request.getHeader("Authorization");
-            if (authToken == null || !jwtTokenVerifier.verifyToken(authToken, email, jwtSecretKey)) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
-                return;
-            }
 
             // Check if the job ID is valid
             if (!validityCheckingService.isValidJobId(jobId)) {
@@ -84,7 +79,7 @@ public class JobApplyServlet extends HttpServlet {
             }
 
             // Perform the job application
-            JSONObject applicationDetails = applicationService.applyForJob(jobSeekerId, jobId);
+            JSONObject applicationDetails = applicationService.applyForJob(userId, jobId);
 
             if (applicationDetails != null) {
                 // Include application details in the success response
