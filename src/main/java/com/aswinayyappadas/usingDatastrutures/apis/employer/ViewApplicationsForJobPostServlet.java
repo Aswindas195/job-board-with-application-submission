@@ -1,7 +1,6 @@
-package com.aswinayyappadas.usingDatastrutures.apis.employer.get;
+package com.aswinayyappadas.usingDatastrutures.apis.employer;
 
 import com.aswinayyappadas.usingDatastrutures.services.GetServices;
-import com.aswinayyappadas.usingDatastrutures.services.KeyServices;
 import com.aswinayyappadas.usingDatastrutures.services.MapperServices;
 import com.aswinayyappadas.usingDatastrutures.services.ValidityCheckingService;
 import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
@@ -15,21 +14,19 @@ import org.json.JSONArray;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/ds/view-applications/employer/*")
+@WebServlet("/api/ds/employer/job-applications")
 public class ViewApplicationsForJobPostServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
     private final GetServices getServices;
-    private final KeyServices keyServices;
     private final MapperServices mapperService;
 
     public ViewApplicationsForJobPostServlet() {
         this.validityCheckingService = new ValidityCheckingService();
         this.getServices = new GetServices();
         this.jwtTokenVerifier = new JwtTokenVerifier();
-        this.keyServices = new KeyServices();
         this.mapperService = new MapperServices();
     }
 
@@ -40,53 +37,45 @@ public class ViewApplicationsForJobPostServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
-            // Extract employerId and jobId from the URL
-            String[] pathInfo = request.getPathInfo().split("/");
-            if (pathInfo.length != 4 || !pathInfo[1].matches("\\d+") || !pathInfo[3].matches("\\d+")) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid URL format.\"}");
+            // Extract employerId and jobId from the query parameter
+            int jobId = Integer.parseInt(request.getParameter("jobId"));
+
+            // Get query parameter for employer id
+            // Extract user ID from JWT
+            int userId = -1;
+            String authToken = request.getHeader("Authorization");
+            if (authToken != null) {
+                // Check if authentication fails
+                try {
+                    userId = jwtTokenVerifier.extractUserId(authToken);
+                } catch (Exception e) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or expired token.\"}");
+                    return;
+                }
+            } else {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
                 return;
             }
-
-            int employerId = Integer.parseInt(pathInfo[1]);
-            int jobId = Integer.parseInt(pathInfo[3]);
-
             // Validate employerId and jobId
-            if (!validityCheckingService.isValidEmployerId(employerId) || !validityCheckingService.isValidJobId(jobId)) {
+            if (!validityCheckingService.isValidEmployerId(userId) || !validityCheckingService.isValidJobId(jobId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.println("{\"status\": \"error\", \"message\": \"Invalid employer ID or job ID.\"}");
                 return;
             }
 
             // Check if employer is mapped to the job
-            if (!mapperService.isEmployerMappedToJob(employerId, jobId)) {
+            if (!mapperService.isEmployerMappedToJob(userId, jobId)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Employer is not mapped to the job.\"}");
                 return;
             }
 
-            // Extract other details from the path
-            String email = getServices.getEmailByUserId(employerId);
-            String jwtSecretKey = keyServices.getJwtSecretKeyByEmail(email);
-
-            // Check if jwtSecretKey is null
-            if (jwtSecretKey == null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. JWT secret key not found.\"}");
-                return;
-            }
-
-            // Read JWT token from the Authorization header
-//            String authToken = request.getHeader("Authorization");
-//            if (authToken == null || !jwtTokenVerifier.verifyToken(authToken, email, jwtSecretKey)) {
-//                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-//                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
-//                return;
-//            }
 
             try {
                 // Fetch applications for the given employerId and jobId
-                JSONArray applications = getServices.getApplicationsByJob(employerId, jobId);
+                JSONArray applications = getServices.getApplicationsByJob(userId, jobId);
 
                 // Return the applications as JSON
                 out.println(applications.toString());

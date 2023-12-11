@@ -3,6 +3,7 @@ package com.aswinayyappadas.usingDatastrutures.services;
 import com.aswinayyappadas.usingDatabase.exceptions.ExceptionHandler;
 import com.aswinayyappadas.usingDatastrutures.applications.ApplicationsDataList;
 import com.aswinayyappadas.usingDatastrutures.job.Job;
+import com.aswinayyappadas.usingDatastrutures.job.LocationJobTypeIndustry;
 import com.aswinayyappadas.usingDatastrutures.joblistings.JobListData;
 import com.aswinayyappadas.usingDatastrutures.util.job.CheckJobIdValidity;
 import com.aswinayyappadas.usingDatastrutures.util.job.JobIdGenerator;
@@ -14,7 +15,7 @@ public class JobListingService implements JobListData, ApplicationsDataList {
 
    // Service to check the validity of job IDs
    private CheckJobIdValidity checkJobIdValidity;
-
+   private LocationJobTypeIndustry locationJobTypeIndustry;
    // Service to generate unique job IDs
    private JobIdGenerator jobIdGenerator;
 
@@ -22,16 +23,22 @@ public class JobListingService implements JobListData, ApplicationsDataList {
    public JobListingService() {
       this.checkJobIdValidity = new CheckJobIdValidity();
       this.jobIdGenerator = new JobIdGenerator();
+      this.locationJobTypeIndustry = new LocationJobTypeIndustry();
    }
 
    // Method to post a new job
-   public int postJob(int employerId, String jobTitle, String jobDescription, String requirements, String location) {
+   public int postJob(int employerId, int industry, int jobType, String jobTitle, String jobDescription, String requirements, int location) {
       // Create new job
       Job job = new Job();
       job.setJobId(getValidJobId());
       job.setTitle(jobTitle);
       job.setDescription(jobDescription);
-      job.setLoaction(location);
+      String strLocation = locationJobTypeIndustry.getLocationMap().containsKey(location) ? locationJobTypeIndustry.getLocationMap().get(location) : "Unknown";
+      job.setLoaction(strLocation);
+      String strJobType = locationJobTypeIndustry.getJobTypeMap().containsKey(jobType) ? locationJobTypeIndustry.getJobTypeMap().get(jobType) : "Unknown";
+      job.setJobType(strJobType);
+      String strIndustry = locationJobTypeIndustry.getIndustryMap().containsKey(industry) ? locationJobTypeIndustry.getIndustryMap().get(industry) : "Unknown";
+      job.setIndustry(strIndustry);
       job.setRequirements(requirements);
 
       // Put details in the job list
@@ -89,14 +96,27 @@ public class JobListingService implements JobListData, ApplicationsDataList {
    }
 
    // Method to update job location
-   public String updateJobLocation(int jobId, String newLocation) {
-      jobList.get(jobId).setLoaction(newLocation);
-      return newLocation;
+   public String updateJobLocation(int jobId, int newLocation) {
+      String strLocation = locationJobTypeIndustry.getLocationMap().containsKey(newLocation) ? locationJobTypeIndustry.getLocationMap().get(newLocation) : "Unknown";
+      jobList.get(jobId).setLoaction(strLocation);
+      return strLocation;
    }
 
    // Method to update job requirements
    public String updateJobRequirements(int jobId, String newRequirements) {
       jobList.get(jobId).setRequirements(newRequirements);
       return newRequirements;
+   }
+
+   public String updateJobType(int jobId, int newJobType) {
+      String strJobType = locationJobTypeIndustry.getJobTypeMap().containsKey(newJobType) ? locationJobTypeIndustry.getJobTypeMap().get(newJobType) : "Unknown";
+      jobList.get(jobId).setJobType(strJobType);
+      return strJobType;
+   }
+
+   public String updateIndustry(int jobId, int newIndustry) {
+      String strIndustry = locationJobTypeIndustry.getIndustryMap().containsKey(newIndustry) ? locationJobTypeIndustry.getIndustryMap().get(newIndustry) : "Unknown";
+      jobList.get(jobId).setIndustry(strIndustry);
+      return strIndustry;
    }
 }

@@ -1,12 +1,9 @@
-package com.aswinayyappadas.usingDatabase.apis.jobseeker.delete;
+package com.aswinayyappadas.usingDatastrutures.apis.jobseeker;
+
 
 import com.aswinayyappadas.usingDatabase.exceptions.ExceptionHandler;
-import com.aswinayyappadas.usingDatabase.services.ApplicationService;
-import com.aswinayyappadas.usingDatabase.services.GetServices;
-import com.aswinayyappadas.usingDatabase.services.KeyServices;
-import com.aswinayyappadas.usingDatabase.services.ValidityCheckingService;
+import com.aswinayyappadas.usingDatastrutures.services.*;
 import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
-
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -15,28 +12,25 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/jobSeeker/delete-application")
-public class JobDeleteServlet extends HttpServlet {
+@WebServlet("/api/ds/job-seeker/application")
+public class ViewAppliedJobsServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
-    private final ApplicationService applicationService;
+    private final GetServices getServices;
 
-    public JobDeleteServlet() {
-        this.applicationService = new ApplicationService();
+    public ViewAppliedJobsServlet() {
+        this.getServices = new GetServices();
         this.validityCheckingService = new ValidityCheckingService();
         this.jwtTokenVerifier = new JwtTokenVerifier();
     }
 
     @Override
-    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
 
         try {
-            // Extract employerId and jobId from the query parameter
-            int jobId = Integer.parseInt(request.getParameter("jobId"));
             int userId = -1;
             // Extreact user id from jwt
             String authToken = request.getHeader("Authorization");
@@ -48,8 +42,6 @@ public class JobDeleteServlet extends HttpServlet {
                 out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
                 return;
             }
-
-
             // Check if the job seeker ID is valid
             if (!validityCheckingService.isValidJobSeekerId(userId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -57,24 +49,15 @@ public class JobDeleteServlet extends HttpServlet {
                 return;
             }
 
-            // Check if the job ID is valid
-            if (!validityCheckingService.isValidJobId(jobId)) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid job ID.\"}");
-                return;
-            }
-            // Perform the job deletion
-            applicationService.deleteJobApplicationByJobSeekerId(userId, jobId);
+            // Retrieve the applied jobs for the job seeker
+            String appliedJobs = getServices.getAppliedJobsByJobSeeker(userId).toString();
 
-            out.println("{\"status\": \"success\", \"message\": \"Job deleted successfully.\"}");
+            // Send the list of applied jobs as a JSON response
+            out.println(appliedJobs);
         } catch (NumberFormatException e) {
-            // Handle invalid input (non-integer values for jobSeekerId or jobId)
+            // Handle invalid input (non-integer values for jobSeekerId)
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             out.println("{\"status\": \"error\", \"message\": \"Invalid input format.\"}");
-        } catch (ExceptionHandler e) {
-            // Handle custom exception for job deletion
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.println("{\"status\": \"error\", \"message\": \"" + e.getMessage() + "\"}");
         } catch (Exception e) {
             // Handle other exceptions
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

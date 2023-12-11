@@ -67,7 +67,7 @@ public class UserRegistrationServlet extends HttpServlet {
                 validationErrors.put("password", "Invalid or missing password. Password must be at least 8 characters.");
             }
             if (!userInputValidator.isValidUserType(usertype)) {
-                validationErrors.put("usertype", "Invalid or missing user type. Accepted values are 'Job_Seeker' or 'Employer'.");
+                validationErrors.put("usertype", "Invalid or missing user type. Accepted values are '1. Job Seeker' or '2. Employer'.");
             }
 
             if (!validationErrors.isEmpty()) {

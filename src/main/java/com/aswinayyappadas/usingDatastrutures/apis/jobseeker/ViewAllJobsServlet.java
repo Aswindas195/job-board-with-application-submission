@@ -1,9 +1,7 @@
-package com.aswinayyappadas.usingDatabase.apis.jobseeker.get;
+package com.aswinayyappadas.usingDatastrutures.apis.jobseeker;
 
-
-import com.aswinayyappadas.usingDatabase.services.GetServices;
-import com.aswinayyappadas.usingDatabase.services.KeyServices;
-import com.aswinayyappadas.usingDatabase.services.ValidityCheckingService;
+import com.aswinayyappadas.usingDatastrutures.services.GetServices;
+import com.aswinayyappadas.usingDatastrutures.services.ValidityCheckingService;
 import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
 
 import jakarta.servlet.annotation.WebServlet;
@@ -11,17 +9,20 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.json.JSONArray;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/jobSeeker/view-applied-jobs")
-public class ViewAppliedJobsServlet extends HttpServlet {
+@WebServlet("/api/ds/job-seeker/view-all-jobs")
+public class ViewAllJobsServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
     private final GetServices getServices;
 
-    public ViewAppliedJobsServlet() {
+
+    public ViewAllJobsServlet() {
         this.getServices = new GetServices();
         this.validityCheckingService = new ValidityCheckingService();
         this.jwtTokenVerifier = new JwtTokenVerifier();
@@ -33,18 +34,24 @@ public class ViewAppliedJobsServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
-
+            // Extract user ID from JWT
             int userId = -1;
-            // Extreact user id from jwt
             String authToken = request.getHeader("Authorization");
             if (authToken != null) {
-                userId = jwtTokenVerifier.extractUserId(authToken);
-            }
-            else if(userId == -1){
+                // Check if authentication fails
+                try {
+                    userId = jwtTokenVerifier.extractUserId(authToken);
+                } catch (Exception e) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or expired token.\"}");
+                    return;
+                }
+            } else {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
                 return;
             }
+
             // Check if the job seeker ID is valid
             if (!validityCheckingService.isValidJobSeekerId(userId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -52,11 +59,11 @@ public class ViewAppliedJobsServlet extends HttpServlet {
                 return;
             }
 
-            // Retrieve the applied jobs for the job seeker
-            String appliedJobs = getServices.getAppliedJobsByJobSeeker(userId).toString();
+            // Retrieve all jobs from job listings
+            JSONArray allJobsArray = getServices.getAllJobsFromListings();
 
-            // Send the list of applied jobs as a JSON response
-            out.println(appliedJobs);
+            // Send the list of all jobs as a JSON response
+            out.println(allJobsArray.toString());
         } catch (NumberFormatException e) {
             // Handle invalid input (non-integer values for jobSeekerId)
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

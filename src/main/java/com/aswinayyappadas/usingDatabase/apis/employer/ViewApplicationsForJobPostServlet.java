@@ -1,7 +1,6 @@
-package com.aswinayyappadas.usingDatabase.apis.employer.get;
+package com.aswinayyappadas.usingDatabase.apis.employer;
 
 import com.aswinayyappadas.usingDatabase.services.GetServices;
-import com.aswinayyappadas.usingDatabase.services.KeyServices;
 import com.aswinayyappadas.usingDatabase.services.MapperService;
 import com.aswinayyappadas.usingDatabase.services.ValidityCheckingService;
 import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
@@ -15,7 +14,7 @@ import org.json.JSONArray;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/employer/job-applications/view")
+@WebServlet("/api/employer/job-applications")
 public class ViewApplicationsForJobPostServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -43,15 +42,21 @@ public class ViewApplicationsForJobPostServlet extends HttpServlet {
             int jobId = Integer.parseInt(request.getParameter("jobId"));
 
             // Get query parameter for employer id
+            // Extract user ID from JWT
             int userId = -1;
-            // Extreact user id from jwt
             String authToken = request.getHeader("Authorization");
             if (authToken != null) {
-                userId = jwtTokenVerifier.extractUserId(authToken);
-            }
-            else {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                out.println("{\"status\": \"error\", \"message\": \"Invalid employer ID or job ID.\"}");
+                // Check if authentication fails
+                try {
+                    userId = jwtTokenVerifier.extractUserId(authToken);
+                } catch (Exception e) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or expired token.\"}");
+                    return;
+                }
+            } else {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
                 return;
             }
             // Validate employerId and jobId

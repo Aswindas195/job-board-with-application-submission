@@ -1,8 +1,10 @@
-package com.aswinayyappadas.usingDatabase.apis.employer.put;
-
+package com.aswinayyappadas.usingDatabase.apis.employer;
 import com.aswinayyappadas.usingDatabase.exceptions.ExceptionHandler;
-import com.aswinayyappadas.usingDatabase.services.*;
+import com.aswinayyappadas.usingDatabase.services.JobListingService;
+import com.aswinayyappadas.usingDatabase.services.MapperService;
+import com.aswinayyappadas.usingDatabase.services.ValidityCheckingService;
 import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
+
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,23 +19,89 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-@WebServlet("/api/employer/edit-job")
-public class JobEditServlet extends HttpServlet {
+@WebServlet("/api/employer/job-post/*")
+public class JobPostDeleteAndEditServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
-
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
-
     private final MapperService mapperService;
     private final JobListingService jobListingService;
 
-    public JobEditServlet() {
-        this.jobListingService = new JobListingService();
-        this.mapperService = new MapperService();
+    public JobPostDeleteAndEditServlet() {
         this.validityCheckingService = new ValidityCheckingService();
+        this.jobListingService = new JobListingService();
         this.jwtTokenVerifier = new JwtTokenVerifier();
+        this.mapperService = new MapperService();
     }
 
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+
+        try {
+            // Extract job ID from the path
+            String pathInfo = request.getPathInfo();
+            if (pathInfo == null || pathInfo.length() < 2) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.println("{\"status\": \"error\", \"message\": \"Invalid URL. Missing job ID in the path.\"}");
+                return;
+            }
+
+            // Remove the leading slash
+            String jobIdString = pathInfo.substring(1);
+
+            // Parse job ID from the path
+            int jobId;
+            try {
+                jobId = Integer.parseInt(jobIdString);
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.println("{\"status\": \"error\", \"message\": \"Invalid job ID format in the path.\"}");
+                return;
+            }
+
+            // Extract user ID from JWT
+            int userId = -1;
+            String authToken = request.getHeader("Authorization");
+            if (authToken != null) {
+                // Check if authentication fails
+                try {
+                    userId = jwtTokenVerifier.extractUserId(authToken);
+                } catch (Exception e) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or expired token.\"}");
+                    return;
+                }
+            } else {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
+                return;
+            }
+
+            // Validate employer ID
+            if (!validityCheckingService.isValidEmployerId(userId)) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.println("{\"status\": \"error\", \"message\": \"Invalid employer ID.\"}");
+                return;
+            }
+
+            try {
+                // Attempt to delete the job
+                jobListingService.deleteJobPost(userId, jobId);
+                // You can add more information in the response if needed
+                out.println("{\"status\": \"success\", \"message\": \"Job deleted successfully.\"}");
+            } catch (ExceptionHandler e) {
+                // Job delete exception
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.println("{\"status\": \"error\", \"message\": \"" + e.getMessage() + "\"}");
+            }
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            out.println("{\"status\": \"error\", \"message\": \"Internal Server Error.\"}");
+        }
+    }
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -41,6 +109,26 @@ public class JobEditServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
+            // Extract job ID from the path
+            String pathInfo = request.getPathInfo();
+            if (pathInfo == null || pathInfo.length() < 2) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.println("{\"status\": \"error\", \"message\": \"Invalid URL. Missing job ID in the path.\"}");
+                return;
+            }
+
+            // Remove the leading slash
+            String jobIdString = pathInfo.substring(1);
+
+            // Parse job ID from the path
+            int jobId;
+            try {
+                jobId = Integer.parseInt(jobIdString);
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.println("{\"status\": \"error\", \"message\": \"Invalid job ID format in the path.\"}");
+                return;
+            }
             // Read the JSON body from the request
             StringBuilder requestBody = new StringBuilder();
             try (BufferedReader reader = request.getReader()) {
@@ -50,7 +138,6 @@ public class JobEditServlet extends HttpServlet {
                 }
             }
             JSONObject jsonBody = new JSONObject(requestBody.toString());
-            int jobId = jsonBody.getInt("jobId");
             int userId = -1;
             // Extreact user id from jwt
             String authToken = request.getHeader("Authorization");
@@ -82,7 +169,6 @@ public class JobEditServlet extends HttpServlet {
             Iterator<String> keys = jsonBody.keys();
             while (keys.hasNext()) {
                 String detailType = keys.next();
-                if(detailType.equals("jobId")) continue;
                 switch (detailType) {
                     case "description":
                         String newJobDescription = jsonBody.optString("description");
@@ -133,5 +219,4 @@ public class JobEditServlet extends HttpServlet {
             out.println("{\"status\": \"error\", \"message\": \"Internal Server Error.\"}");
         }
     }
-
 }

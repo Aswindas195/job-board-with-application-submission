@@ -1,7 +1,6 @@
 package com.aswinayyappadas.usingDatabase.apis.authentication.post;
 
 import com.aswinayyappadas.usingDatabase.services.GetServices;
-import com.aswinayyappadas.usingDatabase.services.KeyServices;
 import com.aswinayyappadas.usingDatabase.services.UserManager;
 import com.aswinayyappadas.usingDatabase.util.user.UserInputValidator;
 
@@ -10,7 +9,6 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 
 import java.security.Key;
-import java.sql.SQLException;
 import java.util.Base64;
 import java.util.Date;
 
@@ -33,7 +31,7 @@ public class UserAuthenticationServlet extends HttpServlet {
     private final GetServices getServices;
     private final UserInputValidator userInputValidator;
     private final Key key;
-    private static String secretKeyString;
+    private static String secretKeyString = "QXjflyMNegfMTCT_iuSd0VAJ2VJoPYKkI3mw7-qyaB8";
 
     public static String getSecretKeyString() {
         return secretKeyString;
@@ -45,8 +43,7 @@ public class UserAuthenticationServlet extends HttpServlet {
         this.userManager = new UserManager();
         this.getServices = new GetServices();
         this.userInputValidator = new UserInputValidator();
-        this.key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
-        secretKeyString = Base64.getUrlEncoder().withoutPadding().encodeToString(this.key.getEncoded());
+        this.key = Keys.hmacShaKeyFor(Base64.getUrlDecoder().decode(secretKeyString));
     }
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {

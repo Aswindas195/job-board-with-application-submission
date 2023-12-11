@@ -22,16 +22,11 @@ public class UserLogoutServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
 
-
-
     // Obtain the secret key string from UserAuthenticationServlet
     private String secretKeyString = UserAuthenticationServlet.getSecretKeyString();
     private final Key key = Keys.hmacShaKeyFor(Base64.getUrlDecoder().decode(secretKeyString));
 
-
-
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String authToken = request.getHeader("Authorization");
 
         if (authToken != null && authToken.startsWith("Bearer ")) {

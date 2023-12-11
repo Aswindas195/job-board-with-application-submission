@@ -1,10 +1,9 @@
-package com.aswinayyappadas.usingDatabase.apis.jobseeker.get;
+package com.aswinayyappadas.usingDatastrutures.apis.jobseeker;
 
 
 
-import com.aswinayyappadas.usingDatabase.services.GetServices;
-import com.aswinayyappadas.usingDatabase.services.KeyServices;
-import com.aswinayyappadas.usingDatabase.services.ValidityCheckingService;
+import com.aswinayyappadas.usingDatastrutures.services.GetServices;
+import com.aswinayyappadas.usingDatastrutures.services.ValidityCheckingService;
 import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -15,19 +14,19 @@ import org.json.JSONArray;
 import java.io.IOException;
 import java.io.PrintWriter;
 
-@WebServlet("/api/jobSeeker/search-job")
+@WebServlet("/api/ds/job-seeker/search-job")
 public class SearchJobsServlet extends HttpServlet{
     private static final long serialVersionUID = 1L;
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
     private final GetServices getServices;
 
+
     public SearchJobsServlet() {
 
         this.getServices = new GetServices();
         this.validityCheckingService = new ValidityCheckingService();
         this.jwtTokenVerifier = new JwtTokenVerifier();
-
     }
 
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -40,12 +39,19 @@ public class SearchJobsServlet extends HttpServlet{
             String industry = request.getParameter("industry");
             String jobType = request.getParameter("jobType");
 
+            // Extract user ID from JWT
             int userId = -1;
-            // Extract user id from jwt
             String authToken = request.getHeader("Authorization");
             if (authToken != null) {
-                userId = jwtTokenVerifier.extractUserId(authToken);
-            } else if (userId == -1) {
+                // Check if authentication fails
+                try {
+                    userId = jwtTokenVerifier.extractUserId(authToken);
+                } catch (Exception e) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or expired token.\"}");
+                    return;
+                }
+            } else {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
                 return;

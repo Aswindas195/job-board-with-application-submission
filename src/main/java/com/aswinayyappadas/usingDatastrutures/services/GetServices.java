@@ -2,6 +2,7 @@ package com.aswinayyappadas.usingDatastrutures.services;
 
 import com.aswinayyappadas.usingDatastrutures.applications.ApplicationsDataList;
 import com.aswinayyappadas.usingDatastrutures.employer.Employer;
+import com.aswinayyappadas.usingDatastrutures.job.Job;
 import com.aswinayyappadas.usingDatastrutures.joblistings.JobListData;
 import com.aswinayyappadas.usingDatastrutures.user.UserData;
 import org.json.JSONArray;
@@ -16,7 +17,7 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
         if (userData.get(userId) instanceof Employer) {
             return "Employer";
         }
-        return "Jobseeker";
+        return "Job Seeker";
     }
 
     // Get email by user ID
@@ -34,7 +35,9 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
                     .put("title", jobList.get(jobId).getTitle())
                     .put("description", jobList.get(jobId).getDescription())
                     .put("requirements", jobList.get(jobId).getRequirements())
-                    .put("location", jobList.get(jobId).getLoaction());
+                    .put("location", jobList.get(jobId).getLoaction())
+                    .put("jobType", jobList.get(jobId).getJobType())
+                    .put("industry", jobList.get(jobId).getIndustry());
             jobPosts.put(jobPost);
         }
         return jobPosts;
@@ -50,7 +53,9 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
                         .put("title", jobList.get(jobId).getTitle())
                         .put("description", jobList.get(jobId).getDescription())
                         .put("requirements", jobList.get(jobId).getRequirements())
-                        .put("location", jobList.get(jobId).getLoaction());
+                        .put("location", jobList.get(jobId).getLoaction())
+                        .put("jobType", jobList.get(jobId).getJobType())
+                        .put("industry", jobList.get(jobId).getIndustry());
                 jobPosts.put(jobPost);
             }
         }
@@ -67,7 +72,9 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
                         .put("title", jobList.get(jobId).getTitle())
                         .put("description", jobList.get(jobId).getDescription())
                         .put("requirements", jobList.get(jobId).getRequirements())
-                        .put("location", jobList.get(jobId).getLoaction());
+                        .put("location", jobList.get(jobId).getLoaction())
+                        .put("jobType", jobList.get(jobId).getJobType())
+                        .put("industry", jobList.get(jobId).getIndustry());
                 jobPosts.put(jobPost);
             }
         }
@@ -77,13 +84,15 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
     // Get all jobs from listings
     public JSONArray getAllJobsFromListings() {
         JSONArray jobPosts = new JSONArray();
-        for (int jobId : jobList.keySet()) {
+        for (Job job : jobList.values()) {
             JSONObject jobPost = new JSONObject()
-                    .put("jobId", jobList.get(jobId).getJobId())
-                    .put("title", jobList.get(jobId).getTitle())
-                    .put("description", jobList.get(jobId).getDescription())
-                    .put("requirements", jobList.get(jobId).getRequirements())
-                    .put("location", jobList.get(jobId).getLoaction());
+                    .put("jobId", job.getJobId())
+                    .put("title", job.getTitle())
+                    .put("description", job.getDescription())
+                    .put("requirements", job.getRequirements())
+                    .put("location", job.getLoaction())
+                    .put("jobType", job.getJobType())
+                    .put("industry", job.getIndustry());
             jobPosts.put(jobPost);
         }
         return jobPosts;
@@ -101,7 +110,9 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
                         .put("title", jobList.get(jobId).getTitle())
                         .put("description", jobList.get(jobId).getDescription())
                         .put("requirements", jobList.get(jobId).getRequirements())
-                        .put("location", jobList.get(jobId).getLoaction());
+                        .put("location", jobList.get(jobId).getLoaction())
+                        .put("jobType", jobList.get(jobId).getJobType())
+                        .put("industry", jobList.get(jobId).getIndustry());
                 jobPosts.put(jobPost);
             }
         }
@@ -138,4 +149,117 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
         return applicationsArray;
     }
 
+    public JSONArray getJobsByLocationIndustryType(String location, String industry, String jobType) {
+        JSONArray jobPosts = new JSONArray();
+        for(Job job : jobList.values()) {
+            if(job.getLoaction().equals(location) && job.getIndustry().equals(industry) && job.getJobType().equals(jobType)) {
+                int jobId = job.getJobId();
+                JSONObject jobPost = new JSONObject()
+                        .put("jobId", jobId)
+                        .put("title", job.getTitle())
+                        .put("description", job.getDescription())
+                        .put("requirements", job.getRequirements())
+                        .put("location", job.getLoaction())
+                        .put("jobType", job.getJobType())
+                        .put("industry", job.getIndustry());
+                jobPosts.put(jobPost);
+            }
+        }
+        return jobPosts;
+    }
+
+    public JSONArray getJobsByLocationIndustry(String location, String industry) {
+        JSONArray jobPosts = new JSONArray();
+        for (Job job : jobList.values()) {
+            if (job.getLoaction().equals(location) && job.getIndustry().equals(industry)) {
+                int jobId = job.getJobId();
+                JSONObject jobPost = new JSONObject()
+                        .put("jobId", jobId)
+                        .put("title", job.getTitle())
+                        .put("description", job.getDescription())
+                        .put("requirements", job.getRequirements())
+                        .put("location", job.getLoaction())
+                        .put("jobType", job.getJobType())
+                        .put("industry", job.getIndustry());
+                jobPosts.put(jobPost);
+            }
+        }
+        return jobPosts;
+    }
+
+    public JSONArray getJobsByLocationType(String location, String jobType) {
+        JSONArray jobPosts = new JSONArray();
+        for (Job job : jobList.values()) {
+            if (job.getLoaction().equals(location) && job.getJobType().equals(jobType)) {
+                int jobId = job.getJobId();
+                JSONObject jobPost = new JSONObject()
+                        .put("jobId", jobId)
+                        .put("title", job.getTitle())
+                        .put("description", job.getDescription())
+                        .put("requirements", job.getRequirements())
+                        .put("location", job.getLoaction())
+                        .put("jobType", job.getJobType())
+                        .put("industry", job.getIndustry());
+                jobPosts.put(jobPost);
+            }
+        }
+        return jobPosts;
+    }
+
+    public JSONArray getJobsByIndustryType(String industry, String jobType) {
+        JSONArray jobPosts = new JSONArray();
+        for (Job job : jobList.values()) {
+            if (job.getIndustry().equals(industry) && job.getJobType().equals(jobType)) {
+                int jobId = job.getJobId();
+                JSONObject jobPost = new JSONObject()
+                        .put("jobId", jobId)
+                        .put("title", job.getTitle())
+                        .put("description", job.getDescription())
+                        .put("requirements", job.getRequirements())
+                        .put("location", job.getLoaction())
+                        .put("jobType", job.getJobType())
+                        .put("industry", job.getIndustry());
+                jobPosts.put(jobPost);
+            }
+        }
+        return jobPosts;
+    }
+
+    public JSONArray getJobsByIndustry(String industry) {
+        JSONArray jobPosts = new JSONArray();
+        for (Job job : jobList.values()) {
+            if (job.getIndustry().equals(industry)) {
+                int jobId = job.getJobId();
+                JSONObject jobPost = new JSONObject()
+                        .put("jobId", jobId)
+                        .put("title", job.getTitle())
+                        .put("description", job.getDescription())
+                        .put("requirements", job.getRequirements())
+                        .put("location", job.getLoaction())
+                        .put("jobType", job.getJobType())
+                        .put("industry", job.getIndustry());
+                jobPosts.put(jobPost);
+            }
+        }
+        return jobPosts;
+    }
+
+    public JSONArray getJobsByType(String jobType) {
+        JSONArray jobPosts = new JSONArray();
+        for (Job job : jobList.values()) {
+            if (job.getJobType().equals(jobType)) {
+                int jobId = job.getJobId();
+                JSONObject jobPost = new JSONObject()
+                        .put("jobId", jobId)
+                        .put("title", job.getTitle())
+                        .put("description", job.getDescription())
+                        .put("requirements", job.getRequirements())
+                        .put("location", job.getLoaction())
+                        .put("jobType", job.getJobType())
+                        .put("industry", job.getIndustry());
+                jobPosts.put(jobPost);
+            }
+        }
+        return jobPosts;
+    }
 }

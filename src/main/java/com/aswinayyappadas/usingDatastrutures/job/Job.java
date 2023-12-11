@@ -6,6 +6,24 @@ public class Job {
     private String description;
     private String loaction;
     private String requirements;
+    private String jobType;
+    private String industry;
+
+    public String getJobType() {
+        return jobType;
+    }
+
+    public void setJobType(String jobType) {
+        this.jobType = jobType;
+    }
+
+    public String getIndustry() {
+        return industry;
+    }
+
+    public void setIndustry(String industry) {
+        this.industry = industry;
+    }
 
     public String getRequirements() {
         return requirements;
