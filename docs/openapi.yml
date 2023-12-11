@@ -1,10 +1,10 @@
 openapi: 3.0.0
 info:
-  title: Job Board with Application Submission APIs
+  title: Job Board with Application Submission
   description: APIs required for all major operations in a job board.
   version: 1.0.0
 tags:
-  - name: User Authentication APIs
+  - name: User Authentication, Registration, and Logout APIs
     description: APIs for user registration, authentication, and logout.
   - name: Employer APIs
     description: APIs for performing employer operations.
@@ -15,7 +15,7 @@ paths:
     post:
       summary: Register a new user
       tags:
-        - User Authentication APIs
+        - User Authentication, Registration, and Logout APIs
       requestBody:
         required: true
         content:
@@ -25,45 +25,52 @@ paths:
               properties:
                 username:
                   type: string
-                  description: User's username
                 email:
                   type: string
                   format: email
-                  description: User's email address
                 password:
                   type: string
-                  description: User's password (at least 8 characters)
                 usertype:
-                  type: string
-                  enum: ["Job_Seeker", "Employer"]
-                  description: Type of user (Job Seeker or Employer)
-              required:
-                - username
-                - email
-                - password
-                - usertype
+                  type: integer
+                  description: '1 for Job Seeker, 2 for Employer'
       responses:
-        "200":
-          description: User registered successfully
+        '200':
+          description: Successful user registration
           content:
             application/json:
               example:
                 status: success
                 message: User registered successfully.
-                userId: 123
-        "400":
-          description: Bad request or validation error
+                userId: 353
+        '400':
+          description: Bad request - Validation errors or invalid JSON format
+          content:
+            application/json:
+              example:
+                username: Invalid or missing username.
+                email: Invalid or missing email address.
+                password: Invalid or missing password. Password must be at least 8 characters.
+                usertype: Invalid or missing user type. Accepted values are '1. Job Seeker' or '2. Employer'.
+        '401':
+          description: User registration exception
           content:
             application/json:
               example:
                 status: error
-                message: Invalid or missing username.
+                message: User registration exception message.
+        '500':
+          description: Internal Server Error - Database operation failed
+          content:
+            application/json:
+              example:
+                status: error
+                message: Database operation failed.
 
   /api/users/login:
     post:
-      summary: Log in with user credentials
+      summary: Authenticate a user and generate JWT token
       tags:
-        - User Authentication APIs
+        - User Authentication, Registration, and Logout APIs
       requestBody:
         required: true
         content:
@@ -74,86 +81,46 @@ paths:
                 email:
                   type: string
                   format: email
-                  description: User's email address
                 password:
                   type: string
-                  description: User's password
-              required:
-                - email
-                - password
       responses:
-        "200":
-          description: User logged in successfully
+        '200':
+          description: Successful authentication
           content:
             application/json:
               example:
-                status: success
-                message: User logged in successfully.
-                userId: 123
-                userType: Employer
-                token: "JWT_ACCESS_TOKEN"
-        "401":
-          description: Unauthorized
+                status: Authentication success
+                user id: 87
+                user type: Employer
+                token: <JWT_TOKEN>
+        '400':
+          description: Bad request - Validation errors
           content:
             application/json:
               example:
                 status: error
-                message: Invalid email or password.
+                message:
+                  email: Invalid or missing email address.
+        '401':
+          description: Unauthorized - Invalid username or password
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid username or password
+        '500':
+          description: Internal Server Error - Failed to generate JWT token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Failed to generate JWT token.
 
-  /api/users/logout/{userId}:
+  /api/users/logout:
     post:
-      summary: Log out a user
+      summary: Logout a user and expire the JWT token
       tags:
-        - User Authentication APIs
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          description: ID of the user to log out
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: User logged out successfully
-          content:
-            application/json:
-              example:
-                status: success
-                message: User logged out successfully.
-        "400":
-          description: Bad request or validation error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid request.
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid or missing token.
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal server error.
-
-  /api/job-post/employer/{employerId}:
-    post:
-      summary: Post a job in job listings
-      tags:
-        - Employer APIs
-      parameters:
-        - name: employerId
-          in: path
-          required: true
-          description: ID of the employer
-          schema:
-            type: integer
+        - User Authentication, Registration, and Logout APIs
       requestBody:
         required: true
         content:
@@ -161,872 +128,98 @@ paths:
             schema:
               type: object
               properties:
-                title:
+                token:
                   type: string
-                  description: Title of the job
-                description:
-                  type: string
-                  description: Description of the job
-                location:
-                  type: string
-                  description: Location of the job
-                requirements:
-                  type: string
-                  description: Requirements for the job
       responses:
-        "201":
+        '200':
+          description: Successful logout
+          content:
+            application/json:
+              example:
+                status: success
+                message: Logout successful.
+                token: <EXPIRED_JWT_TOKEN>
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid or missing token.
+
+  /api/employer/job-post:
+    post:
+      summary: Post a new job
+      tags:
+        - Employer APIs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              industry: 1
+              jobType: 2
+              jobTitle: Software Engineer
+              jobDescription: Exciting opportunity for a software engineer...
+              requirements: Bachelor's degree in Computer Science...
+              location: 13
+      responses:
+        '200':
           description: Job posted successfully
           content:
             application/json:
               example:
                 status: success
                 message: Job posted successfully.
-                jobId: 456
-        "400":
-          description: Bad request or validation error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid or missing job details.
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid or missing token.
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal server error.
+                jobPostId: 45
 
-  /api/view-applications/employer/{employerId}/job/{jobId}:
-    get:
-      summary: View Applications for Job Post
-      tags:
-        - Employer APIs
-      description: Retrieves applications for a specific job post by an employer.
-      parameters:
-        - name: employerId
-          in: path
-          required: true
-          description: ID of the employer
-          schema:
-            type: integer
-        - name: jobId
-          in: path
-          required: true
-          description: ID of the job post
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              example:
-                status: success
-                message: Applications retrieved successfully
-                data:
-                  - applicationId: 1
-                    jobSeekerId: 101
-                    submissionDate: "2023-01-01"
-                    coverLetter: "I am interested in this position..."
-                    resumeFilePath: "/path/to/resume.pdf"
-                    jobSeekerUsername: "jobseeker1"
-                    jobSeekerEmail: "jobseeker1@example.com"
-                  - applicationId: 2
-                    jobSeekerId: 102
-                    submissionDate: "2023-01-02"
-                    coverLetter: "I have relevant experience in..."
-                    resumeFilePath: "/path/to/resume2.pdf"
-                    jobSeekerUsername: "jobseeker2"
-                    jobSeekerEmail: "jobseeker2@example.com"
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid employer ID or job ID
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Employer is not mapped to the job
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal Server Error
-
-  /api/edit-job/employer/{employerId}/requirements/job/{jobId}:
+  /api/employer/job-post/{jobId}:
     put:
-      summary: Update Job Requirements
-      description: Updates the requirements for a specific job post.
+      summary: Edit job details
       tags:
         - Employer APIs
       parameters:
-        - name: employerId
-          in: path
+        - in: path
+          name: jobId
           required: true
-          description: ID of the employer
-          schema:
-            type: integer
-        - name: jobId
-          in: path
-          required: true
-          description: ID of the job post
+          description: The ID of the job to be edited
           schema:
             type: integer
       requestBody:
-        description: JSON body with new requirements
         required: true
         content:
           application/json:
             example:
-              requirements: "Java, Python, HTML, CSS"
+              location: 5
+              jobType: 1
       responses:
         '200':
-          description: Successful operation
+          description: Job details updated successfully
           content:
             application/json:
               example:
                 status: success
-                message: Job requirements updated successfully.
-                updatedData: "Java, Python, HTML, CSS"
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid employer ID, job ID, or invalid input format
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid employer ID, job ID, or missing token
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              example:
-                status: error
-                message: Job not mapped to the employer
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal Server Error
-  /api/edit-job/employer/{employerId}/description/job/{jobId}:
-    put:
-      summary: Update Job Description
-      description: Updates the description for a specific job post.
-      tags:
-        - Employer APIs
-      parameters:
-        - name: employerId
-          in: path
-          required: true
-          description: ID of the employer
-          schema:
-            type: integer
-        - name: jobId
-          in: path
-          required: true
-          description: ID of the job post
-          schema:
-            type: integer
-      requestBody:
-        description: JSON body with new description
-        required: true
-        content:
-          application/json:
-            example:
-              description: "Exciting opportunity for a software developer."
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              example:
-                status: success
-                message: Job description updated successfully.
-                updatedData: "Exciting opportunity for a software developer."
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid employer ID, job ID, or invalid input format
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid employer ID, job ID, or missing token
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              example:
-                status: error
-                message: Job not mapped to the employer
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal Server Error
-  /api/edit-job/employer/{employerId}/location/job/{jobId}:
-    put:
-      summary: Update Job Location
-      description: Updates the location for a specific job post.
-      tags:
-        - Employer APIs
-      parameters:
-        - name: employerId
-          in: path
-          required: true
-          description: ID of the employer
-          schema:
-            type: integer
-        - name: jobId
-          in: path
-          required: true
-          description: ID of the job post
-          schema:
-            type: integer
-      requestBody:
-        description: JSON body with new location
-        required: true
-        content:
-          application/json:
-            example:
-              location: "City Name"
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              example:
-                status: success
-                message: Job location updated successfully.
-                updatedData: "City Name"
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid employer ID, job ID, or invalid input format
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid employer ID, job ID, or missing token
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              example:
-                status: error
-                message: Job not mapped to the employer
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal Server Error
+                message: Job details updated successfully.
+                updatedData:
+                  location: "Bengaluru"
+                  jobType: "Full Time"
 
-  /api/view-job-posts/employer/{employerId}:
-    get:
-      summary: View job posts for a specific employer
-      tags:
-        - Employer APIs
-      parameters:
-        - name: employerId
-          in: path
-          required: true
-          description: ID of the employer
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Job posts retrieved successfully
-          content:
-            application/json:
-              example:
-                status: success
-                jobPosts:
-                  - jobId: 1
-                    title: "Software Engineer"
-                    description: "Exciting opportunity for a software engineer."
-                    location: "San Francisco, CA"
-                  - jobId: 2
-                    title: "Data Scientist"
-                    description: "Join our team as a data scientist and make a difference."
-        "400":
-          description: Bad request or validation error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid request.
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid or missing token.
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal server error.
-  /api/job-delete/employer/{employerId}/job/{jobId}:
     delete:
-      summary: Delete a specific job post for an employer
+      summary: Delete a job
       tags:
         - Employer APIs
       parameters:
-        - name: employerId
-          in: path
+        - in: path
+          name: jobId
           required: true
-          description: ID of the employer
+          description: The ID of the job to be deleted
           schema:
             type: integer
-        - name: jobId
-          in: path
-          required: true
-          description: ID of the job
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Job post deleted successfully
-          content:
-            application/json:
-              example:
-                status: success
-                message: Job post deleted successfully.
-        "400":
-          description: Bad request or validation error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid request.
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid or missing token.
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              example:
-                status: error
-                message: Job not mapped to the employer.
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal server error.
-  /api/job-delete/jobSeeker/{jobSeekerId}/job/{jobId}:
-    delete:
-      summary: Delete a specific job application for a job seeker
-      tags:
-        - Jobseeker APIs
-      parameters:
-        - name: jobSeekerId
-          in: path
-          required: true
-          description: ID of the job seeker
-          schema:
-            type: integer
-        - name: jobId
-          in: path
-          required: true
-          description: ID of the job
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Job application deleted successfully
-          content:
-            application/json:
-              example:
-                status: success
-                message: Job application deleted successfully.
-        "400":
-          description: Bad request or validation error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid request.
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid or missing token.
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              example:
-                status: error
-                message: Job not mapped to the job seeker.
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal server error.
-
-  /api/search-job/jobSeeker/{jobSeekerId}/location/{location}:
-    get:
-      summary: Search jobs by location for a specific job seeker
-      tags:
-        - Jobseeker APIs
-      parameters:
-        - name: jobSeekerId
-          in: path
-          required: true
-          description: ID of the job seeker
-          schema:
-            type: integer
-        - name: location
-          in: path
-          required: true
-          description: Location to search for jobs
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Jobs found successfully
-          content:
-            application/json:
-              example:
-                status: success
-                message: Jobs found successfully.
-                jobs:
-                  - jobId: 1
-                    title: "Software Engineer"
-                    description: "Develop software applications."
-                    location: "City A"
-                    requirements: "Bachelor's degree in Computer Science."
-                  - jobId: 2
-                    title: "Data Analyst"
-                    description: "Analyze and interpret data."
-                    location: "City B"
-                    requirements: "Strong analytical skills."
-        "400":
-          description: Bad request or validation error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid request.
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid or missing token.
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal server error.
-
-  /api/search-job/jobSeeker/{jobSeekerId}/title/{title}:
-    get:
-      summary: Search jobs by title for a specific job seeker
-      tags:
-        - Jobseeker APIs
-      parameters:
-        - name: jobSeekerId
-          in: path
-          required: true
-          description: ID of the job seeker
-          schema:
-            type: integer
-        - name: title
-          in: path
-          required: true
-          description: Title to search for jobs
-          schema:
-            type: string
-      responses:
-        "200":
-          description: Jobs found successfully
-          content:
-            application/json:
-              example:
-                status: success
-                message: Jobs found successfully.
-                jobs:
-                  - jobId: 3
-                    title: "Project Manager"
-                    description: "Manage projects and teams."
-                    location: "City C"
-                    requirements: "5+ years of project management experience."
-                  - jobId: 4
-                    title: "Marketing Specialist"
-                    description: "Develop and implement marketing strategies."
-                    location: "City D"
-                    requirements: "Bachelor's degree in Marketing."
-        "400":
-          description: Bad request or validation error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid request.
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid or missing token.
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal server error.
-
-  /api/apply-job/jobSeeker/{jobSeekerId}/job/{jobId}:
-    post:
-      summary: Apply for a specific job as a job seeker
-      tags:
-        - Jobseeker APIs
-      parameters:
-        - name: jobSeekerId
-          in: path
-          required: true
-          description: ID of the job seeker
-          schema:
-            type: integer
-        - name: jobId
-          in: path
-          required: true
-          description: ID of the job
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                resumeFilePath:
-                  type: string
-                  description: File path of the resume
-                coverLetter:
-                  type: string
-                  description: Cover letter for the job application
-              required:
-                - resumeFilePath
-                - coverLetter
-      responses:
-        "201":
-          description: Job application submitted successfully
-          content:
-            application/json:
-              example:
-                status: success
-                message: Job application submitted successfully.
-                applicationId: 789
-        "400":
-          description: Bad request or validation error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid request.
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid or missing token.
-        "403":
-          description: Forbidden
-          content:
-            application/json:
-              example:
-                status: error
-                message: Job already applied or not found.
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal server error.
-  /api/view-applied-jobs/jobSeeker/{jobSeekerId}:
-    get:
-      summary: View all applied jobs by a specific job seeker
-      tags:
-        - Jobseeker APIs
-      parameters:
-        - name: jobSeekerId
-          in: path
-          required: true
-          description: ID of the job seeker
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Applied jobs retrieved successfully
-          content:
-            application/json:
-              example:
-                status: success
-                appliedJobs:
-                  - jobId: 1
-                    title: "Software Engineer"
-                    description: "Develop software applications."
-                    location: "City A"
-                    requirements: "Bachelor's degree in Computer Science."
-                  - jobId: 2
-                    title: "Data Analyst"
-                    description: "Analyze and interpret data."
-                    location: "City B"
-                    requirements: "Strong analytical skills."
-        "400":
-          description: Bad request or validation error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid request.
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid or missing token.
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal server error.
-  /api/view-all-jobs/jobSeeker/{jobSeekerId}:
-    get:
-      summary: View all jobs by a specific job seeker
-      tags:
-        - Jobseeker APIs
-      parameters:
-        - name: jobSeekerId
-          in: path
-          required: true
-          description: ID of the job seeker
-          schema:
-            type: integer
-      responses:
-        "200":
-          description: Jobs retrieved successfully
-          content:
-            application/json:
-              example:
-                status: success
-                jobs:
-                  - jobId: 1
-                    title: "Software Engineer"
-                    description: "Develop software applications."
-                    location: "City A"
-                    requirements: "Bachelor's degree in Computer Science."
-                  - jobId: 2
-                    title: "Data Analyst"
-                    description: "Analyze and interpret data."
-                    location: "City B"
-                    requirements: "Strong analytical skills."
-        "400":
-          description: Bad request or validation error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid request.
-        "401":
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid or missing token.
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal server error.
-
-  /api/edit-application/jobSeeker/{jobSeekerId}/coverletter/job/{jobId}:
-    put:
-      summary: Update Cover Letter for Job Application
-      description: Updates the cover letter of a job application for a job seeker.
-      tags:
-        - Jobseeker APIs
-      parameters:
-        - name: jobSeekerId
-          in: path
-          required: true
-          description: ID of the job seeker
-          schema:
-            type: integer
-        - name: jobId
-          in: path
-          required: true
-          description: ID of the job post
-          schema:
-            type: integer
-      requestBody:
-        description: JSON body with new cover letter
-        required: true
-        content:
-          application/json:
-            example: {"coverletter": "I am interested in this position..."}
       responses:
         '200':
-          description: Successful operation
+          description: Job deleted successfully
           content:
             application/json:
               example:
                 status: success
-                message: Cover letter updated successfully
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid job seeker ID, job ID, or invalid input format
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid job seeker ID, job ID, or missing token
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              example:
-                status: error
-                message: Application not mapped to the job seeker
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal Server Error
-
-  /api/edit-application/jobSeeker/{jobSeekerId}/resumefilepath/job/{jobId}:
-    put:
-      summary: Update Resume File Path for Job Application
-      description: Updates the resume file path of a job application for a job seeker.
-      tags:
-        - Jobseeker APIs
-      parameters:
-        - name: jobSeekerId
-          in: path
-          required: true
-          description: ID of the job seeker
-          schema:
-            type: integer
-        - name: jobId
-          in: path
-          required: true
-          description: ID of the job post
-          schema:
-            type: integer
-      requestBody:
-        description: JSON body with new resume file path
-        required: true
-        content:
-          application/json:
-            example: {"resumefilepath": "/path/to/new/resume.pdf"}
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              example:
-                status: success
-                message: Resume file path updated successfully
-        '400':
-          description: Bad request
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid job seeker ID, job ID, or invalid input format
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              example:
-                status: error
-                message: Unauthorized. Invalid job seeker ID, job ID, or missing token
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              example:
-                status: error
-                message: Application not mapped to the job seeker
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              example:
-                status: error
-                message: Internal Server Error
+                message: Job deleted successfully.
