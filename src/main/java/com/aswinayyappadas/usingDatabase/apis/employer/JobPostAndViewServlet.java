@@ -3,11 +3,9 @@ package com.aswinayyappadas.usingDatabase.apis.employer;
 import com.aswinayyappadas.usingDatabase.exceptions.ExceptionHandler;
 import com.aswinayyappadas.usingDatabase.services.GetServices;
 import com.aswinayyappadas.usingDatabase.services.JobListingService;
-import com.aswinayyappadas.usingDatabase.services.MapperService;
 import com.aswinayyappadas.usingDatabase.services.ValidityCheckingService;
 import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,26 +17,23 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+
 
 @WebServlet("/api/employer/job-post")
-public class JobPostServlet extends HttpServlet {
+public class JobPostAndViewServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
     private final JobListingService jobListingService;
     private final GetServices getServices;
-    private final MapperService mapperService;
 
-    public JobPostServlet() {
+
+    public JobPostAndViewServlet() {
         this.validityCheckingService = new ValidityCheckingService();
         this.jobListingService = new JobListingService();
         this.jwtTokenVerifier = new JwtTokenVerifier();
         this.getServices = new GetServices();
-        this.mapperService = new MapperService();
     }
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)

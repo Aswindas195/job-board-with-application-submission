@@ -1,21 +1,70 @@
 openapi: 3.0.0
 info:
-  title: Job Board with Application Submission
+  title: Job Board with Application Submission APIs
   description: APIs required for all major operations in a job board.
   version: 1.0.0
 tags:
-  - name: User Authentication, Registration, and Logout APIs
+  - name: User Authentication APIs
     description: APIs for user registration, authentication, and logout.
   - name: Employer APIs
     description: APIs for performing employer operations.
   - name: Jobseeker APIs
     description: APIs for jobseeker operations.
 paths:
+  /api/users/login:
+    post:
+      summary: Authenticate a user and generate JWT token
+      tags:
+        - User Authentication APIs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+      responses:
+        '200':
+          description: Successful authentication
+          content:
+            application/json:
+              example:
+                status: Authentication success
+                user id: 123
+                user type: Jobseeker
+                token: <JWT_TOKEN>
+        '400':
+          description: Bad request - Validation errors
+          content:
+            application/json:
+              example:
+                status: error
+                message:
+                  email: Invalid or missing email address.
+        '401':
+          description: Unauthorized - Invalid username or password
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid username or password
+        '500':
+          description: Internal Server Error - Failed to generate JWT token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Failed to generate JWT token
   /api/users/register:
     post:
       summary: Register a new user
       tags:
-        - User Authentication, Registration, and Logout APIs
+        - User Authentication APIs
       requestBody:
         required: true
         content:
@@ -41,7 +90,7 @@ paths:
               example:
                 status: success
                 message: User registered successfully.
-                userId: 353
+                userId: 123
         '400':
           description: Bad request - Validation errors or invalid JSON format
           content:
@@ -65,71 +114,18 @@ paths:
               example:
                 status: error
                 message: Database operation failed.
-
-  /api/users/login:
-    post:
-      summary: Authenticate a user and generate JWT token
-      tags:
-        - User Authentication, Registration, and Logout APIs
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
-      responses:
-        '200':
-          description: Successful authentication
-          content:
-            application/json:
-              example:
-                status: Authentication success
-                user id: 87
-                user type: Employer
-                token: <JWT_TOKEN>
-        '400':
-          description: Bad request - Validation errors
-          content:
-            application/json:
-              example:
-                status: error
-                message:
-                  email: Invalid or missing email address.
-        '401':
-          description: Unauthorized - Invalid username or password
-          content:
-            application/json:
-              example:
-                status: error
-                message: Invalid username or password
-        '500':
-          description: Internal Server Error - Failed to generate JWT token
-          content:
-            application/json:
-              example:
-                status: error
-                message: Failed to generate JWT token.
-
   /api/users/logout:
     post:
       summary: Logout a user and expire the JWT token
       tags:
-        - User Authentication, Registration, and Logout APIs
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                token:
-                  type: string
+        - User Authentication APIs
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
       responses:
         '200':
           description: Successful logout
@@ -146,80 +142,645 @@ paths:
               example:
                 status: error
                 message: Invalid or missing token.
-
   /api/employer/job-post:
+    get:
+      summary: Get job posts for the logged-in employer
+      tags:
+        - Employer APIs
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
+      responses:
+        '200':
+          description: Successful retrieval of job posts
+          content:
+            application/json:
+              example:
+                status: success
+                jobPosts:
+                  - jobId: 1
+                    jobTitle: Software Engineer
+                    jobDescription: Exciting opportunity for a skilled software engineer...
+                    jobType: Full-time
+                    industry: Technology
+                    location: San Francisco, CA
+                  - jobId: 2
+                    jobTitle: Data Scientist
+                    jobDescription: Join our data science team and work on cutting-edge projects...
+                    jobType: Part-time
+                    industry: Data Science
+                    location: New York, NY
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid or missing token.
+        '500':
+          description: Internal Server Error - Database operation failed
+          content:
+            application/json:
+              example:
+                status: error
+                message: Database operation failed.
     post:
       summary: Post a new job
       tags:
         - Employer APIs
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
       requestBody:
         required: true
         content:
           application/json:
-            example:
-              industry: 1
-              jobType: 2
-              jobTitle: Software Engineer
-              jobDescription: Exciting opportunity for a software engineer...
-              requirements: Bachelor's degree in Computer Science...
-              location: 13
+            schema:
+              type: object
+              properties:
+                industry:
+                  type: integer
+                jobType:
+                  type: integer
+                jobTitle:
+                  type: string
+                jobDescription:
+                  type: string
+                requirements:
+                  type: string
+                location:
+                  type: integer
       responses:
         '200':
-          description: Job posted successfully
+          description: Successful job post
           content:
             application/json:
               example:
                 status: success
                 message: Job posted successfully.
-                jobPostId: 45
-
+                jobDetails:
+                  jobId: 3
+                  jobTitle: Senior Developer
+                  jobDescription: Exciting opportunity for an experienced senior developer...
+                  jobType: Full-time
+                  industry: Technology
+                  location: Seattle, WA
+        '400':
+          description: Bad request - Validation errors or invalid JSON format
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid or missing field in the request.
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid or missing token.
+        '500':
+          description: Internal Server Error - Database operation failed
+          content:
+            application/json:
+              example:
+                status: error
+                message: Database operation failed.
   /api/employer/job-post/{jobId}:
-    put:
-      summary: Edit job details
+    delete:
+      summary: Delete a job post
       tags:
         - Employer APIs
       parameters:
-        - in: path
-          name: jobId
+        - name: jobId
+          in: path
           required: true
-          description: The ID of the job to be edited
+          description: The ID of the job post to delete
           schema:
             type: integer
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
+      responses:
+        '200':
+          description: Successful job deletion
+          content:
+            application/json:
+              example:
+                status: success
+                message: Job deleted successfully.
+        '400':
+          description: Bad request - Invalid job ID format in the path
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid job ID format in the path.
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Unauthorized. Invalid or missing token.
+        '403':
+          description: Forbidden - Job not mapped to the employer
+          content:
+            application/json:
+              example:
+                status: error
+                message: Job not mapped to the employer.
+        '500':
+          description: Internal Server Error - Job deletion operation failed
+          content:
+            application/json:
+              example:
+                status: error
+                message: Failed to delete job.
+    put:
+      summary: Update job details
+      tags:
+        - Employer APIs
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: The ID of the job post to update
+          schema:
+            type: integer
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
       requestBody:
         required: true
         content:
           application/json:
-            example:
-              location: 5
-              jobType: 1
+            schema:
+              type: object
+              properties:
+                description:
+                  type: string
+                location:
+                  type: integer
+                requirements:
+                  type: string
+                jobType:
+                  type: integer
+                industry:
+                  type: integer
       responses:
         '200':
-          description: Job details updated successfully
+          description: Successful job details update
           content:
             application/json:
               example:
                 status: success
                 message: Job details updated successfully.
                 updatedData:
-                  location: "Bengaluru"
-                  jobType: "Full Time"
-
-    delete:
-      summary: Delete a job
+                  description: Exciting opportunity for an experienced senior developer...
+                  location: Seattle, WA
+                  requirements: 5+ years of experience, strong problem-solving skills...
+                  jobType: Full-time
+                  industry: Technology
+        '400':
+          description: Bad request - Invalid detail type or missing required fields
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid detail type or missing required fields in the request.
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Unauthorized. Invalid or missing token.
+        '403':
+          description: Forbidden - Job not mapped to the employer
+          content:
+            application/json:
+              example:
+                status: error
+                message: Job not mapped to the employer.
+        '500':
+          description: Internal Server Error - Job update operation failed
+          content:
+            application/json:
+              example:
+                status: error
+                message: Failed to update job details.
+  /api/employer/job-applications:
+    get:
+      summary: Get job applications for a specific job post
       tags:
         - Employer APIs
       parameters:
-        - in: path
+        - in: query
           name: jobId
-          required: true
-          description: The ID of the job to be deleted
           schema:
             type: integer
+          required: true
+          description: The ID of the job post for which applications are to be retrieved.
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
       responses:
         '200':
-          description: Job deleted successfully
+          description: Successful retrieval of job applications
+          content:
+            application/json:
+              example:
+                - resumeFilePath: cloud-storage/da708330-9637-45b4-8cce-0dd39e251aa4
+                  jobSeekerUsername: Kumar
+                  submissionDate: '2023-12-11 17:23:57.432433+05:30'
+                  coverLetter: Dear Hiring Manager, ...
+                  jobSeekerEmail: kumar@mail.com
+                  applicationId: 5
+                  jobSeekerId: 85
+        '400':
+          description: Bad request - Invalid or missing fields in the request
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid or missing fields in the request.
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid or missing token.
+        '403':
+          description: Forbidden - Employer not authorized to view applications for the job post
+          content:
+            application/json:
+              example:
+                status: error
+                message: Employer not authorized to view applications for the job post.
+        '500':
+          description: Internal Server Error - Failed to retrieve job applications
+          content:
+            application/json:
+              example:
+                status: error
+                message: Failed to retrieve job applications.
+    /api/job-seeker/application/{jobId}:
+    post:
+      summary: Apply for a job
+      tags:
+        - Jobseeker APIs
+      parameters:
+        - in: path
+          name: jobId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the job post to apply for.
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
+      responses:
+        '200':
+          description: Successful job application
           content:
             application/json:
               example:
                 status: success
-                message: Job deleted successfully.
+                message: Job application successful
+                applicationDetails:
+                  resumeFilePath: cloud-storage/da708330-9637-45b4-8cce-0dd39e251aa4
+                  jobSeekerUsername: Kumar
+                  submissionDate: '2023-12-11 17:23:57.432433+05:30'
+                  coverLetter: Dear Hiring Manager, ...
+                  jobSeekerEmail: kumar@mail.com
+                  applicationId: 5
+                  jobSeekerId: 85
+        '403':
+          description: Forbidden - Employer not authorized to view applications for the job post
+          content:
+            application/json:
+              example:
+                status: error
+                message: Employer not authorized to view applications for the job post.
+        '500':
+          description: Internal Server Error - Failed to retrieve job applications
+          content:
+            application/json:
+              example:
+                status: error
+                message: Failed to retrieve job applications.
+    delete:
+      summary: Delete a job application
+      tags:
+        - Jobseeker APIs
+      parameters:
+        - in: path
+          name: jobId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the job post to delete the application.
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
+      responses:
+        '200':
+          description: Successful job application deletion
+          content:
+            application/json:
+              example:
+                status: success
+                message: Job application deleted successfully.
+        '400':
+          description: Bad request - Invalid job ID format in the path
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid job ID format in the path.
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Unauthorized. Invalid or missing token.
+        '403':
+          description: Forbidden - Application not mapped to the job seeker
+          content:
+            application/json:
+              example:
+                status: error
+                message: Application not mapped to the job seeker.
+        '500':
+          description: Internal Server Error - Application deletion operation failed
+          content:
+            application/json:
+              example:
+                status: error
+                message: Failed to delete job application.
+    put:
+      summary: Update job application details
+      tags:
+        - Jobseeker APIs
+      parameters:
+        - in: path
+          name: jobId
+          schema:
+            type: integer
+          required: true
+          description: The ID of the job post to update the application details.
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
+        - in: body
+          name: body
+          description: JSON body with updated details
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resumeFilePath:
+                    type: string
+                  coverLetter:
+                    type: string
+                  # Add more properties as needed
+      responses:
+        '200':
+          description: Successful job application details update
+          content:
+            application/json:
+              example:
+                status: success
+                message: Job application details updated successfully.
+                updatedApplicationData:
+                  resumeFilePath: updated/file/path
+                  coverLetter: Updated cover letter content
+        '400':
+          description: Bad request - Invalid detail type or missing required fields
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid detail type or missing required fields in the request.
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Unauthorized. Invalid or missing token.
+        '403':
+          description: Forbidden - Application not mapped to the job seeker
+          content:
+            application/json:
+              example:
+                status: error
+                message: Application not mapped to the job seeker.
+        '500':
+          description: Internal Server Error - Job application update operation failed
+          content:
+            application/json:
+              example:
+                status: error
+                message: Failed to update job application details.
+  /api/job-seeker/search-job:
+    get:
+      summary: Search for jobs based on location, industry, and job type
+      tags:
+        - Jobseeker APIs
+      parameters:
+        - in: query
+          name: location
+          schema:
+            type: string
+          description: The location for job search
+        - in: query
+          name: industry
+          schema:
+            type: string
+          description: The industry for job search
+        - in: query
+          name: jobType
+          schema:
+            type: string
+          description: The job type for job search
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
+      responses:
+        '200':
+          description: Successful job search
+          content:
+            application/json:
+              example:
+                - jobId: 1
+                  jobTitle: Software Engineer
+                  jobDescription: Exciting opportunity for a skilled software engineer...
+                  jobType: Full-time
+                  industry: Technology
+                  location: San Francisco, CA
+                - jobId: 2
+                  jobTitle: Data Scientist
+                  jobDescription: Join our data science team and work on cutting-edge projects...
+                  jobType: Part-time
+                  industry: Data Science
+                  location: New York, NY
+        '400':
+          description: Bad request - Invalid or missing fields in the request
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid or missing fields in the request.
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid or missing token.
+        '500':
+          description: Internal Server Error - Failed to perform job search
+          content:
+            application/json:
+              example:
+                status: error
+                message: Failed to perform job search.
+  /api/job-seeker/view-all-jobs:
+    get:
+      summary: View all available jobs
+      tags:
+        - Jobseeker APIs
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
+      responses:
+        '200':
+          description: Successful retrieval of all jobs
+          content:
+            application/json:
+              example:
+                - jobId: 1
+                  jobTitle: Software Engineer
+                  jobDescription: Exciting opportunity for a skilled software engineer...
+                  jobType: Full-time
+                  industry: Technology
+                  location: San Francisco, CA
+                - jobId: 2
+                  jobTitle: Data Scientist
+                  jobDescription: Join our data science team and work on cutting-edge projects...
+                  jobType: Part-time
+                  industry: Data Science
+                  location: New York, NY
+        '400':
+          description: Bad request - Invalid or missing token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid or missing token.
+        '401':
+          description: Unauthorized - Invalid or expired token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Unauthorized. Invalid or expired token.
+        '500':
+          description: Internal Server Error - Failed to retrieve all jobs
+          content:
+            application/json:
+              example:
+                status: error
+                message: Failed to retrieve all jobs.
+  /api/job-seeker/application:
+    get:
+      summary: View applied jobs for the job seeker
+      tags:
+        - Jobseeker APIs
+      parameters:
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
+      responses:
+        '200':
+          description: Successful retrieval of applied jobs
+          content:
+            application/json:
+              example:
+                - jobId: 1
+                  jobTitle: Software Engineer
+                  jobDescription: Exciting opportunity for a skilled software engineer...
+                  jobType: Full-time
+                  industry: Technology
+                  location: San Francisco, CA
+                  submissionDate: '2023-12-11 17:23:57.432433+05:30'
+                - jobId: 2
+                  jobTitle: Data Scientist
+                  jobDescription: Join our data science team and work on cutting-edge projects...
+                  jobType: Part-time
+                  industry: Data Science
+                  location: New York, NY
+                  submissionDate: '2023-12-11 17:30:00.000000+05:30'
+        '400':
+          description: Bad request - Invalid or missing token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid or missing token.
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Unauthorized. Invalid or missing token.
+        '500':
+          description: Internal Server Error - Failed to retrieve applied jobs
+          content:
+            application/json:
+              example:
+                status: error
+                message: Failed to retrieve applied jobs.

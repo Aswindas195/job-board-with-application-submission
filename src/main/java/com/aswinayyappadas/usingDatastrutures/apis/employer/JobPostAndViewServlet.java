@@ -1,9 +1,7 @@
 package com.aswinayyappadas.usingDatastrutures.apis.employer;
 
-import com.aswinayyappadas.usingDatabase.exceptions.ExceptionHandler;
 import com.aswinayyappadas.usingDatastrutures.services.*;
 import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,12 +12,9 @@ import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 
 @WebServlet("/api/ds/employer/job-post")
-public class JobPostServlet extends HttpServlet {
+public class JobPostAndViewServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private final JwtTokenVerifier jwtTokenVerifier;
@@ -28,7 +23,7 @@ public class JobPostServlet extends HttpServlet {
     private final JobListingService jobListingService;
 
 
-    public JobPostServlet() {
+    public JobPostAndViewServlet() {
         this.validityCheckingService = new ValidityCheckingService();
         this.jobListingService = new JobListingService();
         this.jwtTokenVerifier = new JwtTokenVerifier();
