@@ -1,0 +1,47 @@
+;
+; Archive created at 2023-12-12 16:28:44 IST
+;     dbname: Job Board DB
+;     TOC Entries: 36
+;     Compression: gzip
+;     Dump Version: 1.15-0
+;     Format: CUSTOM
+;     Integer: 4 bytes
+;     Offset: 8 bytes
+;     Dumped from database version: 16.0 (Ubuntu 16.0-1.pgdg20.04+1)
+;     Dumped by pg_dump version: 16.0 (Ubuntu 16.0-1.pgdg20.04+1)
+;
+;
+; Selected TOC Entries:
+;
+235; 1255 17675 FUNCTION public update_industry() postgres
+222; 1255 17670 FUNCTION public update_job_type() postgres
+234; 1255 17673 FUNCTION public update_location() postgres
+221; 1255 17595 FUNCTION public update_user_type_tbl_user() postgres
+218; 1259 17596 TABLE public tbl_job_application postgres
+217; 1259 17565 SEQUENCE public applications_applicationid_seq postgres
+3369; 0 0 SEQUENCE OWNED BY public applications_applicationid_seq postgres
+219; 1259 17602 TABLE public tbl_job_post postgres
+216; 1259 17550 SEQUENCE public joblistings_jobid_seq postgres
+3370; 0 0 SEQUENCE OWNED BY public joblistings_jobid_seq postgres
+220; 1259 17607 TABLE public tbl_user postgres
+215; 1259 17540 SEQUENCE public users_userid_seq postgres
+3371; 0 0 SEQUENCE OWNED BY public users_userid_seq postgres
+3197; 2604 17613 DEFAULT public tbl_job_application id postgres
+3199; 2604 17614 DEFAULT public tbl_job_post id postgres
+3200; 2604 17615 DEFAULT public tbl_user id postgres
+3360; 0 17596 TABLE DATA public tbl_job_application postgres
+3361; 0 17602 TABLE DATA public tbl_job_post postgres
+3362; 0 17607 TABLE DATA public tbl_user postgres
+3372; 0 0 SEQUENCE SET public applications_applicationid_seq postgres
+3373; 0 0 SEQUENCE SET public joblistings_jobid_seq postgres
+3374; 0 0 SEQUENCE SET public users_userid_seq postgres
+3202; 2606 17682 CONSTRAINT public tbl_job_application pk_tbl_job_application postgres
+3204; 2606 17680 CONSTRAINT public tbl_job_post pk_tbl_job_post postgres
+3206; 2606 17678 CONSTRAINT public tbl_user pk_tbl_user postgres
+3210; 2620 17676 TRIGGER public tbl_job_post before_insert_update_industry postgres
+3211; 2620 17671 TRIGGER public tbl_job_post before_insert_update_job_type postgres
+3212; 2620 17674 TRIGGER public tbl_job_post before_insert_update_location postgres
+3213; 2620 17618 TRIGGER public tbl_user before_insert_update_user_type_tbl_user postgres
+3209; 2606 17683 FK CONSTRAINT public tbl_job_post fk_employer_id postgres
+3207; 2606 17693 FK CONSTRAINT public tbl_job_application fk_job_id postgres
+3208; 2606 17688 FK CONSTRAINT public tbl_job_application fk_jobseeker_id postgres

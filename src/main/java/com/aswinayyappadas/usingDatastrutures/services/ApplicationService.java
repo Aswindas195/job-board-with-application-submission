@@ -14,7 +14,7 @@ import java.util.HashSet;
 
 public class ApplicationService implements ApplicationsDataList, JobListData {
     private ApplicationIdGenerator applicationIdGenerator;
-    private CheckApplicationIdValidity checkApplicationIdValidity;
+    CheckApplicationIdValidity checkApplicationIdValidity;
 
     public ApplicationService() {
         // Initialize ApplicationIdGenerator and CheckApplicationIdValidity
