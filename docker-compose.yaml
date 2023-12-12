@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: tomcat.Dockerfile
+    ports:
+      - "8081:8081"
+    depends_on:
+      - db
+
+  db:
+    build:
+      context: .
+      dockerfile: pgsql.Dockerfile
+    environment:
+      POSTGRES_DB: Job Board DB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 0091
+    ports:
+      - "5432:5432"
