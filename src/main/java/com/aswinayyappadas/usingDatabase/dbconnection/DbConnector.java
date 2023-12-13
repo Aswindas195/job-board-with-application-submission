@@ -1,15 +1,30 @@
 package com.aswinayyappadas.usingDatabase.dbconnection;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+
+
 public class DbConnector {
-    private static final String JDBC_URL = "jdbc:postgresql://test.local:5432/Job Board DB";
+
+//    private static final Dotenv dotenv = Dotenv.load();
+//private static final String JDBC_URL = "jdbc:postgresql://"+  dotenv.get("HOST") + ":" + dotenv.get("PORT")+ "/" +dotenv.get("DBNAME");
+//private static final String JDBC_URL = "jdbc:postgresql://0.0.0.0:5432/job_board_db" ;
+    private static final String JDBC_URL = "jdbc:postgresql://db:5432/job_board_db" ;
     private static final String USERNAME = "postgres";
-    private static final String PASSWORD = "0091";
+//    private static final String USERNAME = dotenv.get("DBUSER");
+private static final String PASSWORD = "0091";
+//    private static final String PASSWORD = dotenv.get("PASSWORD");
+
+
+//    private static final String JDBC_URL = System.getenv("JDBC_URL");
+//    private static final String USERNAME = System.getenv("DBUSER");
+//    private static final String PASSWORD = System.getenv("PASSWORD");
 
     static {
         try {
@@ -20,11 +35,14 @@ public class DbConnector {
         }
     }
     public static Connection getConnection() throws SQLException {
+        System.out.printf(" :::"+ JDBC_URL + "\n" + USERNAME + "\n" + PASSWORD);
         return DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
     }
 
     public static void main(String[] args) {
         Connection connection = null;
+
+        System.out.printf(" :::"+ JDBC_URL + "\n" + USERNAME + "\n" + PASSWORD);
 
         try {
             // Attempt to establish a connection

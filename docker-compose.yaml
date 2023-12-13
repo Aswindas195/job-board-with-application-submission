@@ -1,22 +1,33 @@
 version: '3'
 
 services:
-  web:
-    build:
-      context: .
-      dockerfile: tomcat.Dockerfile
-    ports:
-      - "8081:8081"
-    depends_on:
-      - db
-
   db:
-    build:
-      context: .
-      dockerfile: pgsql.Dockerfile
+    image: postgres_db
     environment:
-      POSTGRES_DB: Job Board DB
+      POSTGRES_DB: job_board_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 0091
     ports:
       - "5432:5432"
+    networks:
+      - mynet
+
+  web:
+    build:
+      context: .
+      dockerfile: tomcat.Dockerfile
+    depends_on:
+      - db
+    ports:
+      - "8081:8080"
+    networks:
+      - mynet
+    environment:
+      JDBC_URL: jdbc:postgresql://db:5432/job_board_db
+      DBUSER: postgres
+      PASSWORD: 0091
+
+
+networks:
+  mynet:
+    driver: bridge
