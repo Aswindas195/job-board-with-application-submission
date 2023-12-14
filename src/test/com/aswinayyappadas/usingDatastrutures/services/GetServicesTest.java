@@ -27,9 +27,9 @@ class GetServicesTest {
         getServices = new GetServices();
         Employer employer = new Employer();
         Jobseeker jobseeker = new Jobseeker();
+        // Mock data
         employer.setEmail("employer@example.com");
         jobseeker.setEmail("jobseeker@example.com");
-
         HashSet<Integer> jobSet = new HashSet<>();
         HashSet<Integer> jobseekerJobSet = new HashSet<>();
         jobseekerJobSet.add(1);
@@ -44,8 +44,6 @@ class GetServicesTest {
         employerJobList.put(1, jobSet);
         userData.put(1, employer);
         userData.put(2, jobseeker);
-
-        // Add any additional setup logic if needed
     }
 
     @AfterEach
@@ -68,50 +66,42 @@ class GetServicesTest {
     void testGetEmailByUserId() {
         assertEquals("employer@example.com", getServices.getEmailByUserId(1));
         assertEquals("jobseeker@example.com", getServices.getEmailByUserId(2));
-        // Add more test cases as needed
     }
 
     @Test
     void testGetJobPostsByEmployer() {
         int employerId = 1;
         assertEquals(1, getServices.getJobPostsByEmployer(employerId).length());
-        // Add more assertions as needed
     }
 
     @Test
     void testGetJobsByLocation() {
         assertEquals(1, getServices.getJobsByLocation("City1").length());
-        // Add more assertions as needed
     }
 
     @Test
     void testGetJobsByTitle() {
         assertEquals(1, getServices.getJobsByTitle("Software Engineer").length());
-        // Add more assertions as needed
     }
 
     @Test
     void testGetAllJobsFromListings() {
         assertEquals(1, getServices.getAllJobsFromListings().length());
-        // Add more assertions as needed
     }
 
     @Test
     void testGetAppliedJobsByJobSeeker() {
         assertEquals(1, getServices.getAppliedJobsByJobSeeker(2).length());
-        // Add more assertions as needed
     }
 
     @Test
     void testGetApplicationsByJob() {
         assertEquals(0, getServices.getApplicationsByJob(1, 1).length());
-        // Add more assertions as needed
     }
 
     @Test
     void testGetJobsByLocationIndustryType() {
         assertEquals(1, getServices.getJobsByLocationIndustryType("City1", "IT", "Full Time").length());
-        // Add more assertions as needed
     }
-    // Method to clear all data (reset data structures)
+
 }

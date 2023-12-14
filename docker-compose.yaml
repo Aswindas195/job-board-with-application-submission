@@ -2,32 +2,26 @@ version: '3'
 
 services:
   db:
-    image: postgres_db
+    image: aswindas195/postgres_db:latest
     environment:
       POSTGRES_DB: job_board_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 0091
+      POSTGRES_PASSWORD: pass
     ports:
       - "5432:5432"
-    networks:
-      - mynet
-
+    volumes:
+      - pg_data:/var/lib/postgresql/data
   web:
-    build:
-      context: .
-      dockerfile: tomcat.Dockerfile
+    image: aswindas195/tomcat_server_working:latest
+    environment:
+      DBNAME: job_board_db
+      DBUSER: postgres
+      HOST: db
+      PASSWORD: pass
+      PORT: 5432
     depends_on:
       - db
     ports:
       - "8081:8080"
-    networks:
-      - mynet
-    environment:
-      JDBC_URL: jdbc:postgresql://db:5432/job_board_db
-      DBUSER: postgres
-      PASSWORD: 0091
-
-
-networks:
-  mynet:
-    driver: bridge
+volumes:
+  pg_data:

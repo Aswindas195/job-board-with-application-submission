@@ -24,7 +24,7 @@ class MapperServicesTest {
     void setUp() {
         // Initialize the MapperServices instance before each test
         mapperServices = new MapperServices();
-
+        // Mock data
         Employer employer = new Employer();
         Jobseeker jobseeker = new Jobseeker();
         employer.setEmail("employer@example.com");

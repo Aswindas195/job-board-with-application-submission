@@ -1,0 +1,3 @@
+compose-up: docker-compose --file /home/qb-aswina/IdeaProjects/Job\ Board\ with\ Application\ Submission/docker-compose.yaml -p jobboardwithapplicationsubmission up -d
+compose-down: docker-compose --file /home/qb-aswina/IdeaProjects/Job\ Board\ with\ Application\ Submission/docker-compose.yaml -p jobboardwithapplicationsubmission down
+compose-stop: docker-compose --file /home/qb-aswina/IdeaProjects/Job\ Board\ with\ Application\ Submission/docker-compose.yaml -p jobboardwithapplicationsubmission stop

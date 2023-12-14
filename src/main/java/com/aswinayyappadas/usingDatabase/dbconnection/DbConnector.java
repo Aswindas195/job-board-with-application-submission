@@ -1,5 +1,6 @@
 package com.aswinayyappadas.usingDatabase.dbconnection;
 
+import com.aswinayyappadas.usingDatabase.exceptions.LogExceptions;
 import io.github.cdimascio.dotenv.Dotenv;
 
 import java.sql.Connection;
@@ -11,21 +12,26 @@ import java.sql.SQLException;
 
 
 public class DbConnector {
+    private static String JDBC_URL = String.format("jdbc:postgresql://%s:%s/%s", getHost(), getPort(), getDbname());
+    private static final String USERNAME = getUsername();
 
-//    private static final Dotenv dotenv = Dotenv.load();
-//private static final String JDBC_URL = "jdbc:postgresql://"+  dotenv.get("HOST") + ":" + dotenv.get("PORT")+ "/" +dotenv.get("DBNAME");
-//private static final String JDBC_URL = "jdbc:postgresql://0.0.0.0:5432/job_board_db" ;
-    private static final String JDBC_URL = "jdbc:postgresql://db:5432/job_board_db" ;
-    private static final String USERNAME = "postgres";
-//    private static final String USERNAME = dotenv.get("DBUSER");
-private static final String PASSWORD = "0091";
-//    private static final String PASSWORD = dotenv.get("PASSWORD");
+    private static final String PASSWORD = getPassword();
 
-
-//    private static final String JDBC_URL = System.getenv("JDBC_URL");
-//    private static final String USERNAME = System.getenv("DBUSER");
-//    private static final String PASSWORD = System.getenv("PASSWORD");
-
+    private static String getHost() {
+        return System.getenv("HOST");
+    }
+    private static String getUsername() {
+        return System.getenv("DBUSER");
+    }
+    private static String getPassword() {
+        return System.getenv("PASSWORD");
+    }
+    private static String getPort() {
+        return System.getenv("PORT");
+    }
+    private static String getDbname() {
+        return System.getenv("DBNAME");
+    }
     static {
         try {
             // Register the PostgreSQL driver
@@ -35,7 +41,6 @@ private static final String PASSWORD = "0091";
         }
     }
     public static Connection getConnection() throws SQLException {
-        System.out.printf(" :::"+ JDBC_URL + "\n" + USERNAME + "\n" + PASSWORD);
         return DriverManager.getConnection(JDBC_URL, USERNAME, PASSWORD);
     }
 

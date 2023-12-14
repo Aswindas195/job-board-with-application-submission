@@ -30,7 +30,6 @@ public class JobListingServiceTest {
         Jobseeker jobseeker = new Jobseeker();
         employer.setEmail("employer@example.com");
         jobseeker.setEmail("jobseeker@example.com");
-
         HashSet<Integer> jobSet = new HashSet<>();
         jobSet.add(1);
         Job job = new Job();
