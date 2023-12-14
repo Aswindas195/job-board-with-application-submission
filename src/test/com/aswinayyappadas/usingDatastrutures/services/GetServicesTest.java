@@ -6,8 +6,6 @@ import com.aswinayyappadas.usingDatastrutures.jobseeker.Jobseeker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import java.util.HashMap;
 import java.util.HashSet;
 
 import static com.aswinayyappadas.usingDatastrutures.applications.ApplicationsDataList.applicationList;
