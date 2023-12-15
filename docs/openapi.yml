@@ -308,6 +308,73 @@ paths:
               example:
                 status: error
                 message: Failed to delete job.
+    get:
+      summary: Retrieve specific job post details
+      tags:
+        - Employer APIs
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: The ID of the job post to retrieve details
+          schema:
+            type: integer
+        - in: header
+          name: Authorization
+          schema:
+            type: string
+          required: true
+          description: JWT token for authentication.
+      responses:
+        '200':
+          description: Successful retrieval of job post details
+          content:
+            application/json:
+              example:
+                status: success
+                data:
+                  jobId: 123
+                  description: Exciting opportunity for an experienced senior developer...
+                  location: Seattle, WA
+                  requirements: 5+ years of experience, strong problem-solving skills...
+                  jobType: Full-time
+                  industry: Technology
+        '400':
+          description: Bad request - Invalid job ID format in the path or missing token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Invalid job ID format in the path or missing token.
+        '401':
+          description: Unauthorized - Invalid or missing token
+          content:
+            application/json:
+              example:
+                status: error
+                message: Unauthorized. Invalid or missing token.
+        '403':
+          description: Forbidden - Job not mapped to the employer
+          content:
+            application/json:
+              example:
+                status: error
+                message: Job not mapped to the employer.
+        '404':
+          description: Not Found - Job not found or invalid job ID
+          content:
+            application/json:
+              example:
+                status: error
+                message: Job not mapped to the employer or invalid job id.
+        '500':
+          description: Internal Server Error - Failed to retrieve job details
+          content:
+            application/json:
+              example:
+                status: error
+                message: Failed to retrieve job details.
+
     put:
       summary: Update job details
       tags:
