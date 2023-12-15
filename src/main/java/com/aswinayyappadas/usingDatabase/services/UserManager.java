@@ -63,7 +63,6 @@ public class UserManager {
         }
     }
 
-
     private boolean isEmailExists(String email) {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT COUNT(*) FROM tbl_user WHERE email = ?";
@@ -113,23 +112,6 @@ public class UserManager {
         } catch (SQLException e) {
            logExceptions.logSQLExceptionDetails(e);
             return -1; // Error during authentication
-        }
-    }
-    public boolean logoutUser(int userId) {
-        try (Connection connection = DbConnector.getConnection()) {
-            String sql = "UPDATE tbl_user SET jwt_secret_key = NULL WHERE id = ?";
-
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setInt(1, userId);
-
-                int rowsAffected = preparedStatement.executeUpdate();
-
-                // Check if the update was successful
-                return rowsAffected > 0;
-            }
-        } catch (SQLException e) {
-            logExceptions.logSQLExceptionDetails(e);
-            return false; // Error during logout
         }
     }
 }

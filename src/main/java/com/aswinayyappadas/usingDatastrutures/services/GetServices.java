@@ -262,4 +262,28 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
         }
         return jobPosts;
     }
+
+    public JSONObject getJobPostsByEmployer(int userId, int jobId) {
+        // Check if the employer has posted the specified job
+        if (employerJobList.containsKey(userId) && employerJobList.get(userId).contains(jobId)
+                && jobList.containsKey(jobId)) {
+
+            Job job = jobList.get(jobId);
+
+            // Construct a JSON object for the job post
+            JSONObject jobPost = new JSONObject()
+                    .put("jobId", job.getJobId())
+                    .put("title", job.getTitle())
+                    .put("description", job.getDescription())
+                    .put("requirements", job.getRequirements())
+                    .put("location", job.getLoaction())
+                    .put("jobType", job.getJobType())
+                    .put("industry", job.getIndustry());
+
+            return jobPost;
+        }
+
+        // If the specified job is not found or the user is not an employer, return an empty JSONObject
+        return null;
+    }
 }

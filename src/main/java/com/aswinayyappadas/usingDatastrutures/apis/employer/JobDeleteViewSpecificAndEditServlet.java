@@ -1,10 +1,11 @@
-package com.aswinayyappadas.usingDatabase.apis.employer;
-import com.aswinayyappadas.usingDatabase.exceptions.ExceptionHandler;
-import com.aswinayyappadas.usingDatabase.services.JobListingService;
-import com.aswinayyappadas.usingDatabase.services.MapperService;
-import com.aswinayyappadas.usingDatabase.services.ValidityCheckingService;
-import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
+package com.aswinayyappadas.usingDatastrutures.apis.employer;
 
+import com.aswinayyappadas.usingDatabase.exceptions.ExceptionHandler;
+import com.aswinayyappadas.usingDatastrutures.services.GetServices;
+import com.aswinayyappadas.usingDatastrutures.services.JobListingService;
+import com.aswinayyappadas.usingDatastrutures.services.MapperServices;
+import com.aswinayyappadas.usingDatastrutures.services.ValidityCheckingService;
+import com.aswinayyappadas.usingDatabase.util.jwt.JwtTokenVerifier;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -19,19 +20,21 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-@WebServlet("/api/employer/job-post/*")
-public class JobPostDeleteAndEditServlet extends HttpServlet {
+@WebServlet("/api/ds/employer/job-post/*")
+public class JobDeleteViewSpecificAndEditServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private final JwtTokenVerifier jwtTokenVerifier;
     private final ValidityCheckingService validityCheckingService;
-    private final MapperService mapperService;
+    private final MapperServices mapperServices;
     private final JobListingService jobListingService;
+    private final GetServices getServices;
 
-    public JobPostDeleteAndEditServlet() {
+    public JobDeleteViewSpecificAndEditServlet() {
         this.validityCheckingService = new ValidityCheckingService();
         this.jobListingService = new JobListingService();
         this.jwtTokenVerifier = new JwtTokenVerifier();
-        this.mapperService = new MapperService();
+        this.mapperServices = new MapperServices();
+        this.getServices = new GetServices();
     }
 
     @Override
@@ -84,6 +87,13 @@ public class JobPostDeleteAndEditServlet extends HttpServlet {
             if (!validityCheckingService.isValidEmployerId(userId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                 out.println("{\"status\": \"error\", \"message\": \"Invalid employer ID.\"}");
+                return;
+            }
+
+            // Check if the job is mapped to the employer
+            if (!mapperServices.isJobMappedToEmployer(jobId, userId)) {
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                out.println("{\"status\": \"error\", \"message\": \"Job not mapped to the employer.\"}");
                 return;
             }
 
@@ -158,7 +168,7 @@ public class JobPostDeleteAndEditServlet extends HttpServlet {
             }
 
             // Check if the job is mapped to the employer
-            if (!mapperService.isJobMappedToEmployer(jobId, userId)) {
+            if (!mapperServices.isJobMappedToEmployer(jobId, userId)) {
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 out.println("{\"status\": \"error\", \"message\": \"Job not mapped to the employer.\"}");
                 return;
@@ -172,23 +182,23 @@ public class JobPostDeleteAndEditServlet extends HttpServlet {
                 switch (detailType) {
                     case "description":
                         String newJobDescription = jsonBody.optString("description");
-                        updatedDataMap.put("description", jobListingService.updateJobDescription(userId, jobId, newJobDescription));
+                        updatedDataMap.put("description", jobListingService.updateJobDescription(jobId, newJobDescription));
                         break;
                     case "location":
                         int newLocation = jsonBody.optInt("location");
-                        updatedDataMap.put("location", jobListingService.updateJobLocation(userId, jobId, newLocation));
+                        updatedDataMap.put("location", jobListingService.updateJobLocation(jobId, newLocation));
                         break;
                     case "requirements":
                         String newRequirements = jsonBody.optString("requirements");
-                        updatedDataMap.put("requirements", jobListingService.updateJobRequirements(userId, jobId, newRequirements));
+                        updatedDataMap.put("requirements", jobListingService.updateJobRequirements(jobId, newRequirements));
                         break;
                     case "jobType":
                         int newJobType = jsonBody.optInt("jobType");
-                        updatedDataMap.put("jobType", jobListingService.updateJobType(userId, jobId, newJobType));
+                        updatedDataMap.put("jobType", jobListingService.updateJobType(jobId, newJobType));
                         break;
                     case "industry":
                         int newIndustry = jsonBody.optInt("industry");
-                        updatedDataMap.put("industry", jobListingService.updateIndustry(userId, jobId, newIndustry));
+                        updatedDataMap.put("industry", jobListingService.updateIndustry(jobId, newIndustry));
                         break;
                     // Add more cases for other keys if needed
                     default:
@@ -209,12 +219,78 @@ public class JobPostDeleteAndEditServlet extends HttpServlet {
             // Handle invalid input (non-integer values for employerId or jobId)
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             out.println("{\"status\": \"error\", \"message\": \"Invalid input format.\"}");
-        } catch (ExceptionHandler e) {
-            // Handle job update exception
-            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            out.println("{\"status\": \"error\", \"message\": \"" + e.getMessage() + "\"}");
         } catch (Exception e) {
             // Handle any unexpected exceptions
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            out.println("{\"status\": \"error\", \"message\": \"Internal Server Error.\"}");
+        }
+    }
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+        response.setContentType("application/json");
+        PrintWriter out = response.getWriter();
+
+        try {
+            // Extract job ID from the path
+            String pathInfo = request.getPathInfo();
+            if (pathInfo == null || pathInfo.length() < 2) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.println("{\"status\": \"error\", \"message\": \"Invalid URL. Missing job ID in the path.\"}");
+                return;
+            }
+
+            // Remove the leading slash
+            String jobIdString = pathInfo.substring(1);
+
+            // Parse job ID from the path
+            int jobId;
+            try {
+                jobId = Integer.parseInt(jobIdString);
+            } catch (NumberFormatException e) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.println("{\"status\": \"error\", \"message\": \"Invalid job ID format in the path.\"}");
+                return;
+            }
+
+            // Extract user ID from JWT
+            int userId = -1;
+            String authToken = request.getHeader("Authorization");
+            if (authToken != null) {
+                // Check if authentication fails
+                try {
+                    userId = jwtTokenVerifier.extractUserId(authToken);
+                } catch (Exception e) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or expired token.\"}");
+                    return;
+                }
+            } else {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
+                return;
+            }
+
+            // Validate employerId
+            if (!validityCheckingService.isValidEmployerId(userId)) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.println("{\"status\": \"error\", \"message\": \"Invalid employer ID.\"}");
+                return;
+            }
+
+            // Fetch job posts for the given employerId
+            JSONObject jobPosts = getServices.getJobPostsByEmployer(userId, jobId);
+
+            // Check if jobPosts is null
+            if (jobPosts == null) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                out.println("{\"status\": \"error\", \"message\": \"Job not mapped to the employer or invalid job id.\"}");
+                return;
+            }
+
+            // Return the job posts as JSON
+            out.println(jobPosts.toString());
+        } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             out.println("{\"status\": \"error\", \"message\": \"Internal Server Error.\"}");
         }

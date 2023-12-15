@@ -67,7 +67,7 @@ public class ViewApplicationsForJobPostServlet extends HttpServlet {
             }
 
             // Check if employer is mapped to the job
-            if (!mapperService.isEmployerMappedToJob(userId, jobId)) {
+            if (!mapperService.isJobMappedToEmployer(jobId, userId)) {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Employer is not mapped to the job.\"}");
                 return;

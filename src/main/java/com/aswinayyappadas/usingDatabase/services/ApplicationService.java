@@ -17,8 +17,6 @@ public class ApplicationService {
     public ApplicationService() {
         this.logExceptions = new LogExceptions();
     }
-
-
     public JSONObject applyForJob(int jobSeekerId, int jobId) throws ExceptionHandler {
         // Check if the user has already applied for the job
         if (hasUserAppliedForJob(jobSeekerId, jobId)) {
@@ -177,42 +175,4 @@ public class ApplicationService {
             throw new ExceptionHandler("Error deleting job application.", e);
         }
     }
-    public JSONObject displayUpdatedApplication(int jobSeekerId, int jobId) throws ExceptionHandler {
-        // Check if the application exists before attempting to display
-        if (!hasUserAppliedForJob(jobSeekerId, jobId)) {
-            throw new ExceptionHandler("Error displaying edited application. Application not found.");
-        }
-
-        try (Connection connection = DbConnector.getConnection()) {
-            // Your SQL query to retrieve the edited application details
-            String sql = "SELECT * FROM tbl_job_application WHERE job_seeker_id = ? AND job_id = ?";
-
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setInt(1, jobSeekerId);
-                preparedStatement.setInt(2, jobId);
-
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    if (resultSet.next()) {
-                        // Application details found, create a JSON object with all fields
-                        JSONObject applicationDetails = new JSONObject();
-                        applicationDetails.put("applicationId", resultSet.getInt("id"));
-                        applicationDetails.put("jobSeekerId", resultSet.getInt("job_seeker_id"));
-                        applicationDetails.put("jobId", resultSet.getInt("job_id"));
-                        applicationDetails.put("resumeFilePath", resultSet.getString("resume_file_path"));
-                        applicationDetails.put("coverLetter", resultSet.getString("cover_letter"));
-                        applicationDetails.put("submissionDate", resultSet.getTimestamp("date").toString());
-                        // Add other fields as needed
-
-                        return applicationDetails;
-                    } else {
-                        throw new ExceptionHandler("Application not found or not authorized to display the edited application.");
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            logExceptions.logSQLExceptionDetails(e);
-            throw new ExceptionHandler("Error displaying edited application.", e);
-        }
-    }
-
 }

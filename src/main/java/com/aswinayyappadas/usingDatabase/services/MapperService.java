@@ -57,26 +57,4 @@ public class MapperService {
         }
         return false; // Default to false in case of an exception
     }
-
-    public boolean isEmployerMappedToJob(int employerId, int jobId) {
-        try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT COUNT(*) FROM tbl_job_post WHERE employer_id = ? AND id = ?";
-
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setInt(1, employerId);
-                preparedStatement.setInt(2, jobId);
-
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    if (resultSet.next()) {
-                        int count = resultSet.getInt(1);
-                        return count > 0; // If count > 0, the employer is mapped to the job
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            logExceptions.logSQLExceptionDetails(e);
-            // Handle the exception appropriately, e.g., log it or throw a custom exception
-        }
-        return false; // Default to false in case of an exception
-    }
 }

@@ -12,7 +12,7 @@ services:
     volumes:
       - pg_data:/var/lib/postgresql/data
   web:
-    image: aswindas195/tomcat_server_working:latest
+    image: aswindas195/tomcat_server:latest
     environment:
       DBNAME: job_board_db
       DBUSER: postgres

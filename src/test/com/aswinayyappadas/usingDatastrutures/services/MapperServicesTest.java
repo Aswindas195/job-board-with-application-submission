@@ -68,11 +68,4 @@ class MapperServicesTest {
         assertFalse(mapperServices.isApplicationMappedToJobSeeker(1, 1));
         assertFalse(mapperServices.isApplicationMappedToJobSeeker(2, 2));
     }
-
-    @Test
-    void testIsEmployerMappedToJob() {
-        assertTrue(mapperServices.isEmployerMappedToJob(1, 1));
-        assertFalse(mapperServices.isEmployerMappedToJob(1, 2));
-        assertFalse(mapperServices.isEmployerMappedToJob(2, 1));
-    }
 }

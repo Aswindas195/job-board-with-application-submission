@@ -1,7 +1,6 @@
 package com.aswinayyappadas.usingDatastrutures.services;
 
 import com.aswinayyappadas.usingDatastrutures.employer.Employer;
-import com.aswinayyappadas.usingDatastrutures.job.Job;
 import com.aswinayyappadas.usingDatastrutures.jobseeker.Jobseeker;
 import com.aswinayyappadas.usingDatastrutures.user.User;
 import com.aswinayyappadas.usingDatastrutures.user.UserData;

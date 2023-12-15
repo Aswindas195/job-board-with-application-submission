@@ -126,10 +126,6 @@ public class JobListingService {
         }
     }
     public String updateJobDescription(int employerId, int jobId, String newJobDescription) throws ExceptionHandler {
-//        // Check if the job is mapped to the employer
-//        if (!mapperService.isJobMappedToEmployer(jobId, employerId)) {
-//            throw new ExceptionHandler("Job not mapped to the employer.");
-//        }
 
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "UPDATE tbl_job_post SET description = ? WHERE employer_id = ? AND id = ? RETURNING description";

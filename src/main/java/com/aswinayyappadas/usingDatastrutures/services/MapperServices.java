@@ -24,13 +24,4 @@ public class MapperServices implements JobListData, ApplicationsDataList {
         return false; // Application is not mapped to the job seeker
     }
 
-    public boolean isEmployerMappedToJob(int employerId, int jobId) {
-        // Check if the employer exists, the job exists, and the employer has posted the job
-        if (employerJobList.containsKey(employerId) && jobList.containsKey(jobId)
-                && employerJobList.get(employerId).contains(jobId)) {
-            return true; // Employer is mapped to the job
-        }
-        return false; // Employer is not mapped to the job
-    }
-
 }

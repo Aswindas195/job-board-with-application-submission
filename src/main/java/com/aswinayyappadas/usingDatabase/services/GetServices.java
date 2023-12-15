@@ -11,36 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class GetServices {
-    public JSONObject getUserById(int userId) throws ExceptionHandler {
-        try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT user_name, email, user_type FROM tbl_user WHERE id = ?";
-
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setInt(1, userId);
-
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    if (resultSet.next()) {
-                        // Assuming you have a User class; adjust accordingly
-                        String username = resultSet.getString("user_name");
-                        String email = resultSet.getString("email");
-                        String userType = resultSet.getString("user_type");
-
-                        // Construct a JSON object
-
-                        return new JSONObject()
-                                .put("username", username)
-                                .put("email", email)
-                                .put("usertype", userType);
-                    } else {
-                        throw new ExceptionHandler("User not found");
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            throw new ExceptionHandler("Error retrieving user by ID.", e);
-        }
-    }
-
     public JSONArray getJobPostsByEmployer(int employerId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT id, title, industry, job_type, description, requirements, location FROM tbl_job_post WHERE employer_id = ?";
@@ -78,26 +48,6 @@ public class GetServices {
             }
         } catch (SQLException e) {
             throw new ExceptionHandler("Error retrieving job posts by employer ID.", e);
-        }
-    }
-
-    public String getEmailByUserId(int userId) throws ExceptionHandler {
-        try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT email FROM tbl_user WHERE id = ?";
-
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setInt(1, userId);
-
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    if (resultSet.next()) {
-                        return resultSet.getString("email");
-                    } else {
-                        throw new ExceptionHandler("User not found");
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            throw new ExceptionHandler("Error retrieving email by user ID.", e);
         }
     }
 
@@ -167,7 +117,6 @@ public class GetServices {
             throw new ExceptionHandler("Error retrieving applied jobs by job seeker ID.", e);
         }
     }
-
     public JSONArray getAllJobsFromListings() throws SQLException {
         JSONArray jobListingsArray = new JSONArray();
 
@@ -239,45 +188,6 @@ public class GetServices {
             throw new ExceptionHandler("Error retrieving job listings by location.", e);
         }
     }
-    public JSONArray getJobsByTitle(String title) throws ExceptionHandler {
-        try (Connection connection = DbConnector.getConnection()) {
-            String sql = "SELECT id, title, job_type, industry, description, requirements, location FROM tbl_job_post WHERE title = ?";
-
-            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
-                preparedStatement.setString(1, title);
-
-                try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                    JSONArray jobListingsArray = new JSONArray();
-
-                    while (resultSet.next()) {
-                        int jobId = resultSet.getInt("id");
-                        String jobTitle = resultSet.getString("title");
-                        String industry = resultSet.getString("industry");
-                        String jobType = resultSet.getString("job_type");
-                        String description = resultSet.getString("description");
-                        String requirements = resultSet.getString("requirements");
-                        String location = resultSet.getString("location");
-
-                        JSONObject jobListingObject = new JSONObject();
-                        jobListingObject.put("jobId", jobId);
-                        jobListingObject.put("title", jobTitle);
-                        jobListingObject.put("industry", industry);
-                        jobListingObject.put("jobType", jobType);
-                        jobListingObject.put("description", description);
-                        jobListingObject.put("requirements", requirements);
-                        jobListingObject.put("location", location);
-
-                        jobListingsArray.put(jobListingObject);
-                    }
-
-                    return jobListingsArray;
-                }
-            }
-        } catch (SQLException e) {
-            throw new ExceptionHandler("Error retrieving job listings by title.", e);
-        }
-    }
-
 
     public JSONArray getApplicationsByJob(int employerId, int jobId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
@@ -566,6 +476,46 @@ public class GetServices {
             }
         } catch (SQLException e) {
             throw new ExceptionHandler("Error retrieving job listings by job type.", e);
+        }
+    }
+
+    public JSONObject getJobPostsByEmployer(int employerId, int jobId) throws ExceptionHandler {
+        try (Connection connection = DbConnector.getConnection()) {
+            String sql = "SELECT id, title, industry, job_type, description, requirements, location FROM tbl_job_post WHERE employer_id = ? AND id = ?";
+
+            try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
+                preparedStatement.setInt(1, employerId);
+                preparedStatement.setInt(2, jobId);
+
+                try (ResultSet resultSet = preparedStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        int id = resultSet.getInt("id");
+                        String title = resultSet.getString("title");
+                        String location = resultSet.getString("location");
+                        String industry = resultSet.getString("industry");
+                        String jobType = resultSet.getString("job_type");
+                        String description = resultSet.getString("description");
+                        String requirements = resultSet.getString("requirements");
+
+                        // Construct a JSON object for the job post
+                        JSONObject jobPost = new JSONObject()
+                                .put("jobId", id)
+                                .put("title", title)
+                                .put("industry", industry)
+                                .put("jobType", jobType)
+                                .put("description", description)
+                                .put("requirements", requirements)
+                                .put("location", location);
+
+                        return jobPost;
+                    } else {
+                        // Return an empty JSONObject if no job post is found
+                        return null;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            throw new ExceptionHandler("Error retrieving job post by employer ID and job ID.", e);
         }
     }
 }
