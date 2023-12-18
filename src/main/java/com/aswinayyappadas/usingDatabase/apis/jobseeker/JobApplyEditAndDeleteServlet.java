@@ -63,6 +63,7 @@ public class JobApplyEditAndDeleteServlet extends HttpServlet {
             // Extract user ID from JWT
             int userId = -1;
             String authToken = request.getHeader("Authorization");
+
             if (authToken != null) {
                 // Check if authentication fails
                 try {
@@ -127,7 +128,6 @@ public class JobApplyEditAndDeleteServlet extends HttpServlet {
                 out.println("{\"status\": \"error\", \"message\": \"Invalid URL. Missing job ID in the path.\"}");
                 return;
             }
-
             String[] pathParts = pathInfo.split("/");
             int jobId;
             try {
@@ -140,6 +140,7 @@ public class JobApplyEditAndDeleteServlet extends HttpServlet {
             // Extract user ID from JWT
             int userId = -1;
             String authToken = request.getHeader("Authorization");
+
             if (authToken != null) {
                 // Check if authentication fails
                 try {
@@ -168,10 +169,10 @@ public class JobApplyEditAndDeleteServlet extends HttpServlet {
                 out.println("{\"status\": \"error\", \"message\": \"Invalid job ID.\"}");
                 return;
             }
-            // Perform the job deletion
+            // Perform the application deletion
             applicationService.deleteJobApplicationByJobSeekerId(userId, jobId);
 
-            out.println("{\"status\": \"success\", \"message\": \"Job deleted successfully.\"}");
+            out.println("{\"status\": \"success\", \"message\": \"Application for jobId: " + jobId + " deleted successfully.\"}");
         } catch (NumberFormatException e) {
             // Handle invalid input (non-integer values for jobSeekerId or jobId)
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -223,12 +224,19 @@ public class JobApplyEditAndDeleteServlet extends HttpServlet {
             }
             JSONObject jsonBody = new JSONObject(requestBody.toString());
 
+            // Extract user ID from JWT
             int userId = -1;
-
-            // Extract user id from jwt
             String authToken = request.getHeader("Authorization");
+
             if (authToken != null) {
-                userId = jwtTokenVerifier.extractUserId(authToken);
+                // Check if authentication fails
+                try {
+                    userId = jwtTokenVerifier.extractUserId(authToken);
+                } catch (Exception e) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or expired token.\"}");
+                    return;
+                }
             } else {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
@@ -258,11 +266,21 @@ public class JobApplyEditAndDeleteServlet extends HttpServlet {
                 switch (detailType) {
                     case "resumeFilePath":
                         String newResumeFilePath = jsonBody.optString("resumeFilePath");
+                        if(newResumeFilePath == null || newResumeFilePath.isEmpty()) {
+                            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                            out.println("{\"status\": \"error\", \"message\": \"Missing, null, or empty values in the request body.\"}");
+                            return;
+                        }
                         applicationService.updateResumeFilePath(userId, jobId, newResumeFilePath);
                         updatedApplicationDataMap.put("resumeFilepath", newResumeFilePath);
                         break;
                     case "coverLetter":
                         String newCoverLetter = jsonBody.optString("coverLetter");
+                        if(newCoverLetter == null || newCoverLetter.isEmpty()) {
+                            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                            out.println("{\"status\": \"error\", \"message\": \"Missing, null, or empty values in the request body.\"}");
+                            return;
+                        }
                         applicationService.updateCoverLetter(userId, jobId, newCoverLetter);
                         updatedApplicationDataMap.put("coverLetter", newCoverLetter);
                         break;

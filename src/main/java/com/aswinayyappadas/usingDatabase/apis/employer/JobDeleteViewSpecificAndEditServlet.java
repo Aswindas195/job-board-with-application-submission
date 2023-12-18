@@ -68,6 +68,7 @@ public class JobDeleteViewSpecificAndEditServlet extends HttpServlet {
             // Extract user ID from JWT
             int userId = -1;
             String authToken = request.getHeader("Authorization");
+
             if (authToken != null) {
                 // Check if authentication fails
                 try {
@@ -173,9 +174,14 @@ public class JobDeleteViewSpecificAndEditServlet extends HttpServlet {
             while (keys.hasNext()) {
                 String detailType = keys.next();
                 switch (detailType) {
-                    case "description":
-                        String newJobDescription = jsonBody.optString("description");
-                        updatedDataMap.put("description", jobListingService.updateJobDescription(userId, jobId, newJobDescription));
+                    case "jobDescription":
+                        String newJobDescription = jsonBody.optString("jobDescription");
+                        if(newJobDescription == null || newJobDescription.isEmpty()) {
+                            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                            out.println("{\"status\": \"error\", \"message\": \"Missing, null, or empty values in the request body.\"}");
+                            return;
+                        }
+                        updatedDataMap.put("jobDescription", jobListingService.updateJobDescription(userId, jobId, newJobDescription));
                         break;
                     case "location":
                         int newLocation = jsonBody.optInt("location");
@@ -183,6 +189,11 @@ public class JobDeleteViewSpecificAndEditServlet extends HttpServlet {
                         break;
                     case "requirements":
                         String newRequirements = jsonBody.optString("requirements");
+                        if(newRequirements == null || newRequirements.isEmpty()) {
+                            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                            out.println("{\"status\": \"error\", \"message\": \"Missing, null, or empty values in the request body.\"}");
+                            return;
+                        }
                         updatedDataMap.put("requirements", jobListingService.updateJobRequirements(userId, jobId, newRequirements));
                         break;
                     case "jobType":

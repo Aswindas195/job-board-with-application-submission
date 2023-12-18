@@ -31,17 +31,25 @@ public class ViewAppliedJobsServlet extends HttpServlet {
         PrintWriter out = response.getWriter();
 
         try {
+            // Extract user ID from JWT
             int userId = -1;
-            // Extreact user id from jwt
             String authToken = request.getHeader("Authorization");
+
             if (authToken != null) {
-                userId = jwtTokenVerifier.extractUserId(authToken);
-            }
-            else if(userId == -1){
+                // Check if authentication fails
+                try {
+                    userId = jwtTokenVerifier.extractUserId(authToken);
+                } catch (Exception e) {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or expired token.\"}");
+                    return;
+                }
+            } else {
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 out.println("{\"status\": \"error\", \"message\": \"Unauthorized. Invalid or missing token.\"}");
                 return;
             }
+
             // Check if the job seeker ID is valid
             if (!validityCheckingService.isValidJobSeekerId(userId)) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);

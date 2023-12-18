@@ -39,6 +39,7 @@ public class JobPostAndViewServlet extends HttpServlet {
             // Extract user ID from JWT
             int userId = -1;
             String authToken = request.getHeader("Authorization");
+
             if (authToken != null) {
                 // Check if authentication fails
                 try {
@@ -94,6 +95,17 @@ public class JobPostAndViewServlet extends HttpServlet {
 
             // Parse JSON data
             JSONObject jsonData = new JSONObject(jsonBody.toString());
+            // Ensure required fields are present, not null, and not empty
+            if (!jsonData.has("industry") || jsonData.isNull("industry") ||
+                    !jsonData.has("jobType") || jsonData.isNull("jobType") ||
+                    !jsonData.has("jobTitle") || jsonData.isNull("jobTitle") || jsonData.getString("jobTitle").isEmpty() ||
+                    !jsonData.has("jobDescription") || jsonData.isNull("jobDescription") || jsonData.getString("jobDescription").isEmpty() ||
+                    !jsonData.has("requirements") || jsonData.isNull("requirements") || jsonData.getString("requirements").isEmpty() ||
+                    !jsonData.has("location") || jsonData.isNull("location")) {
+                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                out.println("{\"status\": \"error\", \"message\": \"Missing, null, or empty values in the request body.\"}");
+                return;
+            }
 
             // Extract job post data from JSON
             int industry = jsonData.getInt("industry");
@@ -106,6 +118,7 @@ public class JobPostAndViewServlet extends HttpServlet {
             // Extract user ID from JWT
             int userId = -1;
             String authToken = request.getHeader("Authorization");
+
             if (authToken != null) {
                 // Check if authentication fails
                 try {

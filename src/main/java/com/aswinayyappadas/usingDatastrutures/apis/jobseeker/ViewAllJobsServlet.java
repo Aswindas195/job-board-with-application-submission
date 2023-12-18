@@ -37,6 +37,7 @@ public class ViewAllJobsServlet extends HttpServlet {
             // Extract user ID from JWT
             int userId = -1;
             String authToken = request.getHeader("Authorization");
+
             if (authToken != null) {
                 // Check if authentication fails
                 try {
