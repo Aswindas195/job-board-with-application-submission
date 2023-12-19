@@ -1,3 +1,6 @@
+/**
+ * Service class for managing job listings, including posting, updating, and deleting jobs.
+ */
 package com.aswinayyappadas.usingDatabase.services;
 
 import com.aswinayyappadas.usingDatabase.dbconnection.DbConnector;
@@ -10,12 +13,28 @@ public class JobListingService {
     private final LogExceptions logExceptions;
     private final ApplicationService applicationService;
     private final MapperService mapperService;
+    /**
+     * Constructor for the JobListingService class.
+     * Initializes the required services.
+     */
     public JobListingService() {
         this.logExceptions = new LogExceptions();
         this.applicationService = new ApplicationService();
         this.mapperService = new MapperService();
     }
-
+    /**
+     * Posts a new job listing to the database.
+     *
+     * @param employerId      The ID of the employer posting the job.
+     * @param industry        The industry ID associated with the job.
+     * @param jobType         The job type ID associated with the job.
+     * @param jobTitle        The title of the job.
+     * @param jobDescription  The description of the job.
+     * @param requirements    The requirements for the job.
+     * @param location        The location ID associated with the job.
+     * @return The ID of the newly posted job.
+     * @throws ExceptionHandler If an error occurs during the posting process.
+     */
     public int postJob(int employerId, int industry, int jobType ,String jobTitle, String jobDescription, String requirements, int location)
             throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
@@ -50,7 +69,13 @@ public class JobListingService {
             throw new ExceptionHandler("Error posting job.", e);
         }
     }
-
+    /**
+     * Deletes a job post from the database.
+     *
+     * @param employerId The ID of the employer deleting the job.
+     * @param jobId      The ID of the job to be deleted.
+     * @throws ExceptionHandler If an error occurs during the deletion process.
+     */
     public void deleteJobPost(int employerId, int jobId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             // Delete corresponding entries from the applications table
@@ -76,6 +101,15 @@ public class JobListingService {
             throw new ExceptionHandler("Error deleting job.", e);
         }
     }
+    /**
+     * Updates the requirements of a job listing.
+     *
+     * @param employerId      The ID of the employer updating the job.
+     * @param jobId           The ID of the job to be updated.
+     * @param newRequirements The new requirements for the job.
+     * @return The updated requirements of the job.
+     * @throws ExceptionHandler If an error occurs during the update process.
+     */
     public String updateJobRequirements(int employerId, int jobId, String newRequirements) throws ExceptionHandler {
         // Check if the job is mapped to the employer
         if (!mapperService.isJobMappedToEmployer(jobId, employerId)) {
@@ -103,6 +137,15 @@ public class JobListingService {
             throw new ExceptionHandler("Error updating job requirements.", e);
         }
     }
+    /**
+     * Updates the location of a job listing.
+     *
+     * @param employerId The ID of the employer updating the job.
+     * @param jobId      The ID of the job to be updated.
+     * @param newLocation The new location ID for the job.
+     * @return The updated location ID of the job.
+     * @throws ExceptionHandler If an error occurs during the update process.
+     */
     public String updateJobLocation(int employerId, int jobId, int newLocation) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "UPDATE tbl_job_post SET location = ? WHERE employer_id = ? AND id = ? RETURNING location";
@@ -125,6 +168,15 @@ public class JobListingService {
             throw new ExceptionHandler("Error updating job location.", e);
         }
     }
+    /**
+     * Updates the description of a job listing.
+     *
+     * @param employerId         The ID of the employer updating the job.
+     * @param jobId              The ID of the job to be updated.
+     * @param newJobDescription  The new description for the job.
+     * @return The updated description of the job.
+     * @throws ExceptionHandler If an error occurs during the update process.
+     */
     public String updateJobDescription(int employerId, int jobId, String newJobDescription) throws ExceptionHandler {
 
         try (Connection connection = DbConnector.getConnection()) {
@@ -148,7 +200,15 @@ public class JobListingService {
             throw new ExceptionHandler("Error updating job description.", e);
         }
     }
-
+    /**
+     * Updates the job type of a job listing.
+     *
+     * @param employerId The ID of the employer updating the job.
+     * @param jobId      The ID of the job to be updated.
+     * @param newJobType The new job type ID for the job.
+     * @return The updated job type ID of the job.
+     * @throws ExceptionHandler If an error occurs during the update process.
+     */
     public String updateJobType(int employerId, int jobId, int newJobType) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "UPDATE tbl_job_post SET job_type = ? WHERE employer_id = ? AND id = ? RETURNING job_type";
@@ -171,7 +231,15 @@ public class JobListingService {
             throw new ExceptionHandler("Error updating job type.", e);
         }
     }
-
+    /**
+     * Updates the industry of a job listing.
+     *
+     * @param employerId  The ID of the employer updating the job.
+     * @param jobId       The ID of the job to be updated.
+     * @param newIndustry The new industry ID for the job.
+     * @return The updated industry ID of the job.
+     * @throws ExceptionHandler If an error occurs during the update process.
+     */
     public String updateIndustry(int employerId, int jobId, int newIndustry) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "UPDATE tbl_job_post SET industry = ? WHERE employer_id = ? AND id = ? RETURNING industry";

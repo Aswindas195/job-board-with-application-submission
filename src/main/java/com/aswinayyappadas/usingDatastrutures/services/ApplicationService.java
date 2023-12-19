@@ -11,7 +11,11 @@ import org.json.JSONObject;
 
 import java.util.Date;
 import java.util.HashSet;
-
+/**
+ * This class represents a service for managing job applications.
+ * It provides methods for applying for jobs, checking application status,
+ * updating application details, and more.
+ */
 public class ApplicationService implements ApplicationsDataList, JobListData {
     private ApplicationIdGenerator applicationIdGenerator;
     CheckApplicationIdValidity checkApplicationIdValidity;
@@ -21,15 +25,27 @@ public class ApplicationService implements ApplicationsDataList, JobListData {
         this.applicationIdGenerator = new ApplicationIdGenerator();
         this.checkApplicationIdValidity = new CheckApplicationIdValidity();
     }
-
-    // Check if the user has applied for a specific job
+    /**
+     * Check if the user has applied for a specific job.
+     *
+     * @param jobSeekerId The ID of the job seeker.
+     * @param jobId       The ID of the job.
+     * @return True if the user has applied for the job, false otherwise.
+     */
     public boolean hasUserAppliedForJob(int jobSeekerId, int jobId) {
         if (!jobseekerApplicationList.containsKey(jobSeekerId)) {
             return false;
         } else return jobseekerApplicationList.get(jobSeekerId).contains(jobId);
     }
 
-    // Apply for a job and return application details as JSON
+    /**
+     * Apply for a job and return application details as JSON.
+     *
+     * @param jobSeekerId The ID of the job seeker.
+     * @param jobId       The ID of the job.
+     * @return A JSON object containing application details.
+     * @throws ExceptionHandler If an error occurs during application.
+     */
     public JSONObject applyForJob(int jobSeekerId, int jobId) throws ExceptionHandler {
         // Check if the user has already applied for the job
         if (hasUserAppliedForJob(jobSeekerId, jobId)) {
@@ -73,7 +89,11 @@ public class ApplicationService implements ApplicationsDataList, JobListData {
         return applicationJson;
     }
 
-    // Get a valid application ID
+    /**
+     * Get a valid application ID.
+     *
+     * @return A valid application ID.
+     */
     public int getValidApplicationId() {
         int applicationId = -1;
         while (true) {
@@ -83,14 +103,26 @@ public class ApplicationService implements ApplicationsDataList, JobListData {
         return applicationId;
     }
 
-    // Delete a job application for a specific job seeker
+    /**
+     * Delete a job application for a specific job seeker.
+     *
+     * @param jobSeekerId The ID of the job seeker.
+     * @param jobId       The ID of the job.
+     */
     public void deleteJobApplicationByJobSeekerId(int jobSeekerId, int jobId) {
         if (jobseekerApplicationList.containsKey(jobSeekerId) && jobseekerApplicationList.get(jobSeekerId).contains(jobId)) {
             jobseekerApplicationList.get(jobSeekerId).remove(jobId);
         }
     }
 
-    // Update resume file path for a specific job seeker and job
+    /**
+     * Update resume file path for a specific job seeker and job.
+     *
+     * @param jobSeekerId        The ID of the job seeker.
+     * @param jobId              The ID of the job.
+     * @param newResumeFilePath  The new resume file path.
+     * @return The updated resume file path.
+     */
     public String updateResumeFilePath(int jobSeekerId, int jobId, String newResumeFilePath) {
         for (int applicationId : applicationList.keySet()) {
             if (applicationList.get(applicationId).getJobId() == jobId && applicationList.get(applicationId).getJobseekerId() == jobSeekerId) {
@@ -100,7 +132,14 @@ public class ApplicationService implements ApplicationsDataList, JobListData {
         return newResumeFilePath;
     }
 
-    // Update cover letter for a specific job seeker and job
+    /**
+     * Update cover letter for a specific job seeker and job.
+     *
+     * @param jobSeekerId    The ID of the job seeker.
+     * @param jobId          The ID of the job.
+     * @param newCoverLetter The new cover letter.
+     * @return The updated cover letter.
+     */
     public String updateCoverLetter(int jobSeekerId, int jobId, String newCoverLetter) {
         for (int applicationId : applicationList.keySet()) {
             if (applicationList.get(applicationId).getJobId() == jobId && applicationList.get(applicationId).getJobseekerId() == jobSeekerId) {
@@ -110,7 +149,13 @@ public class ApplicationService implements ApplicationsDataList, JobListData {
         return newCoverLetter;
     }
 
-    // Display updated application details for a specific job seeker and job
+    /**
+     * Display updated application details for a specific job seeker and job.
+     *
+     * @param jobSeekerId The ID of the job seeker.
+     * @param jobId       The ID of the job.
+     * @return A JSON object containing updated application details.
+     */
     public JSONObject displayUpdatedApplication(int jobSeekerId, int jobId) {
         JSONObject applicationJson = new JSONObject();
         if (jobseekerApplicationList.get(jobSeekerId).contains(jobId)) {

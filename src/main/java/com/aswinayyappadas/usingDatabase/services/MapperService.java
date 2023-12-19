@@ -1,3 +1,6 @@
+/**
+ * Service class for mapping relationships between entities such as jobs and employers, and job applications and job seekers.
+ */
 package com.aswinayyappadas.usingDatabase.services;
 
 import com.aswinayyappadas.usingDatabase.dbconnection.DbConnector;
@@ -10,11 +13,21 @@ import java.sql.SQLException;
 
 public class MapperService {
     private final LogExceptions logExceptions;
-
+    /**
+     * Constructor for the MapperService class.
+     * Initializes the LogExceptions instance for logging.
+     */
     public MapperService() {
         this.logExceptions = new LogExceptions();
     }
 
+    /**
+     * Checks if a job is mapped to a specific employer.
+     *
+     * @param jobId      The ID of the job to be checked for mapping.
+     * @param employerId The ID of the employer to check for mapping.
+     * @return True if the job is mapped to the employer; otherwise, false.
+     */
     public boolean isJobMappedToEmployer(int jobId, int employerId) {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT COUNT(*) FROM tbl_job_post WHERE id = ? AND employer_id = ?";
@@ -36,6 +49,13 @@ public class MapperService {
         }
         return false; // Default to false in case of an exception
     }
+    /**
+     * Checks if a job application is mapped to a specific job seeker.
+     *
+     * @param jobSeekerId The ID of the job seeker to be checked for mapping.
+     * @param jobId       The ID of the job to check for mapping with the job seeker.
+     * @return True if the application is mapped to the job seeker; otherwise, false.
+     */
     public boolean isApplicationMappedToJobSeeker(int jobSeekerId, int jobId) {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT COUNT(*) FROM tbl_job_application WHERE job_seeker_id = ? AND job_id = ?";

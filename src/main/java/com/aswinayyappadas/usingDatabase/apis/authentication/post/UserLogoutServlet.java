@@ -25,7 +25,13 @@ public class UserLogoutServlet extends HttpServlet {
     // Obtain the secret key string from UserAuthenticationServlet
     private String secretKeyString = UserAuthenticationServlet.getSecretKeyString();
     private final Key key = Keys.hmacShaKeyFor(Base64.getUrlDecoder().decode(secretKeyString));
-
+    /**
+     * Handles HTTP POST requests for user logout.
+     *
+     * @param request  The HttpServletRequest object.
+     * @param response The HttpServletResponse object.
+     * @throws IOException If an I/O error occurs.
+     */
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         String authToken = request.getHeader("Authorization");
 

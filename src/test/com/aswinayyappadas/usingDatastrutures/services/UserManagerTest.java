@@ -86,7 +86,7 @@ class UserManagerTest {
         // Test creating a Jobseeker instance
         Jobseeker jobseeker = userManager.createJobseeker(1, "Jobseeker1", "jobseeker@example.com", "hashedPassword", "salt");
 
-        // Check if the Jobseeker instance is created correctly
+        // Check if the Job seeker instance is created correctly
         assertNotNull(jobseeker);
         assertEquals(1, jobseeker.getJobseekerId());
         assertEquals("Jobseeker1", jobseeker.getName());

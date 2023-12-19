@@ -1,3 +1,9 @@
+/**
+ * This class represents the service layer for job applications in the application.
+ * It provides methods for applying for jobs, checking if a user has already applied,
+ * updating cover letters and resume file paths, and deleting job applications.
+ * The class uses a database connection for executing SQL queries related to job applications.
+ */
 package com.aswinayyappadas.usingDatabase.services;
 
 import com.aswinayyappadas.usingDatabase.dbconnection.DbConnector;
@@ -14,9 +20,21 @@ import java.sql.SQLException;
 public class ApplicationService {
     private final LogExceptions logExceptions;
 
+    /**
+     * Constructs an {@code ApplicationService} instance and initializes the {@code LogExceptions} object.
+     */
     public ApplicationService() {
         this.logExceptions = new LogExceptions();
     }
+
+    /**
+     * Applies for a job by inserting a new job application into the database.
+     *
+     * @param jobSeekerId The ID of the job seeker applying for the job.
+     * @param jobId       The ID of the job being applied for.
+     * @return A JSON object containing details of the applied job, or null if the application is not successful.
+     * @throws ExceptionHandler If an error occurs during the application process.
+     */
     public JSONObject applyForJob(int jobSeekerId, int jobId) throws ExceptionHandler {
         // Check if the user has already applied for the job
         if (hasUserAppliedForJob(jobSeekerId, jobId)) {
@@ -65,6 +83,13 @@ public class ApplicationService {
         }
     }
 
+    /**
+     * Checks if a user has already applied for a specific job.
+     *
+     * @param jobSeekerId The ID of the job seeker.
+     * @param jobId       The ID of the job.
+     * @return True if the user has already applied, false otherwise.
+     */
     public boolean hasUserAppliedForJob(int jobSeekerId, int jobId) {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT COUNT(*) FROM tbl_job_application WHERE job_seeker_id = ? AND job_id = ?";
@@ -81,11 +106,19 @@ public class ApplicationService {
                 }
             }
         } catch (SQLException e) {
-           logExceptions.logSQLExceptionDetails(e);
+            logExceptions.logSQLExceptionDetails(e);
             // Handle the exception appropriately, e.g., log it or throw a custom exception
         }
         return false; // Default to false in case of an exception
     }
+
+    /**
+     * Deletes all job applications for a specific job.
+     *
+     * @param connection The database connection.
+     * @param jobId      The ID of the job for which applications should be deleted.
+     * @throws SQLException If an error occurs during the deletion process.
+     */
     public void deleteApplicationsForJob(Connection connection, int jobId) throws SQLException {
         String deleteApplicationsSql = "DELETE FROM tbl_job_application WHERE job_id = ?";
 
@@ -94,6 +127,16 @@ public class ApplicationService {
             preparedStatement.executeUpdate();
         }
     }
+
+    /**
+     * Updates the cover letter for a specific job application.
+     *
+     * @param jobSeekerId     The ID of the job seeker.
+     * @param jobId           The ID of the job.
+     * @param newCoverLetter  The new cover letter text.
+     * @return The updated cover letter.
+     * @throws ExceptionHandler If an error occurs during the update process.
+     */
     public String updateCoverLetter(int jobSeekerId, int jobId, String newCoverLetter) throws ExceptionHandler {
         // Check if the application exists before attempting to update
         if (!hasUserAppliedForJob(jobSeekerId, jobId)) {
@@ -117,10 +160,20 @@ public class ApplicationService {
                 }
             }
         } catch (SQLException e) {
-           logExceptions.logSQLExceptionDetails(e);
+            logExceptions.logSQLExceptionDetails(e);
             throw new ExceptionHandler("Error updating cover letter.", e);
         }
     }
+
+    /**
+     * Updates the resume file path for a specific job application.
+     *
+     * @param jobSeekerId        The ID of the job seeker.
+     * @param jobId              The ID of the job.
+     * @param newResumeFilePath  The new resume file path.
+     * @return The updated resume file path.
+     * @throws ExceptionHandler If an error occurs during the update process.
+     */
     public String updateResumeFilePath(int jobSeekerId, int jobId, String newResumeFilePath) throws  ExceptionHandler{
         // Check if the application exists before attempting to update
         if (!hasUserAppliedForJob(jobSeekerId, jobId)) {
@@ -144,10 +197,18 @@ public class ApplicationService {
                 }
             }
         } catch (SQLException e) {
-           logExceptions.logSQLExceptionDetails(e);
+            logExceptions.logSQLExceptionDetails(e);
             throw new ExceptionHandler("Error updating resume file path.", e);
         }
     }
+
+    /**
+     * Deletes a job application based on the job seeker ID and job ID.
+     *
+     * @param jobSeekerId The ID of the job seeker.
+     * @param jobId       The ID of the job.
+     * @throws ExceptionHandler If an error occurs during the deletion process.
+     */
     public void deleteJobApplicationByJobSeekerId(int jobSeekerId, int jobId) throws ExceptionHandler {
         // Check if the application exists before attempting to delete
         if (!hasUserAppliedForJob(jobSeekerId, jobId)) {
@@ -171,8 +232,9 @@ public class ApplicationService {
                 // Job application deleted successfully
             }
         } catch (SQLException e) {
-           logExceptions.logSQLExceptionDetails(e);
+            logExceptions.logSQLExceptionDetails(e);
             throw new ExceptionHandler("Error deleting job application.", e);
         }
     }
 }
+

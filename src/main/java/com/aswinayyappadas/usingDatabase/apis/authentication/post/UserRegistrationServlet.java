@@ -28,7 +28,13 @@ public class UserRegistrationServlet extends HttpServlet {
         this.userManager = new UserManager();
         this.userInputValidator = new UserInputValidator();
     }
-
+    /**
+     * Handles HTTP POST requests for user logout.
+     *
+     * @param request  The HttpServletRequest object.
+     * @param response The HttpServletResponse object.
+     * @throws IOException If an I/O error occurs.
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {

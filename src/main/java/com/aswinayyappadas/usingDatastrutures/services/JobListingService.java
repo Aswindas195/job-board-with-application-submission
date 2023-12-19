@@ -26,7 +26,18 @@ public class JobListingService implements JobListData, ApplicationsDataList {
       this.locationJobTypeIndustry = new LocationJobTypeIndustry();
    }
 
-   // Method to post a new job
+   /**
+    * Post a new job with the specified details.
+    *
+    * @param employerId     The ID of the employer posting the job.
+    * @param industry       The industry code of the job.
+    * @param jobType        The job type code of the job.
+    * @param jobTitle       The title of the job.
+    * @param jobDescription The description of the job.
+    * @param requirements   The requirements for the job.
+    * @param location       The location code of the job.
+    * @return The ID of the newly posted job.
+    */
    public int postJob(int employerId, int industry, int jobType, String jobTitle, String jobDescription, String requirements, int location) {
       // Create new job
       Job job = new Job();
@@ -51,7 +62,11 @@ public class JobListingService implements JobListData, ApplicationsDataList {
       return job.getJobId();
    }
 
-   // Method to get a valid job ID
+   /**
+    * Get a valid job ID.
+    *
+    * @return A valid job ID.
+    */
    public int getValidJobId() {
       int jobId = -1;
       while (true) {
@@ -60,8 +75,13 @@ public class JobListingService implements JobListData, ApplicationsDataList {
       }
       return jobId;
    }
-
-   // Method to delete a job post
+   /**
+    * Delete a job post.
+    *
+    * @param employerId The ID of the employer attempting to delete the job.
+    * @param jobId      The ID of the job to be deleted.
+    * @throws ExceptionHandler If the job is not found or not authorized to delete.
+    */
    public void deleteJobPost(int employerId, int jobId) throws ExceptionHandler {
       try {
          // Check if the job exists and the employer is authorized to delete it
@@ -89,31 +109,62 @@ public class JobListingService implements JobListData, ApplicationsDataList {
       }
    }
 
-   // Method to update job description
+   /**
+    * Update job description.
+    *
+    * @param jobId             The ID of the job to update.
+    * @param newJobDescription The new description for the job.
+    * @return The updated job description.
+    */
    public String updateJobDescription(int jobId, String newJobDescription) {
       jobList.get(jobId).setDescription(newJobDescription);
       return newJobDescription;
    }
 
-   // Method to update job location
+   /**
+    * Update job location.
+    *
+    * @param jobId       The ID of the job to update.
+    * @param newLocation The new location ID for the job.
+    * @return The updated job location.
+    */
    public String updateJobLocation(int jobId, int newLocation) {
       String strLocation = locationJobTypeIndustry.getLocationMap().containsKey(newLocation) ? locationJobTypeIndustry.getLocationMap().get(newLocation) : "Unknown";
       jobList.get(jobId).setLoaction(strLocation);
       return strLocation;
    }
 
-   // Method to update job requirements
+   /**
+    * Update job requirements.
+    *
+    * @param jobId           The ID of the job to update.
+    * @param newRequirements The new requirements for the job.
+    * @return The updated job requirements.
+    */
    public String updateJobRequirements(int jobId, String newRequirements) {
       jobList.get(jobId).setRequirements(newRequirements);
       return newRequirements;
    }
-
+   /**
+    * Update job type.
+    *
+    * @param jobId       The ID of the job to update.
+    * @param newJobType   The new job type ID for the job.
+    * @return The updated job type.
+    */
    public String updateJobType(int jobId, int newJobType) {
       String strJobType = locationJobTypeIndustry.getJobTypeMap().containsKey(newJobType) ? locationJobTypeIndustry.getJobTypeMap().get(newJobType) : "Unknown";
       jobList.get(jobId).setJobType(strJobType);
       return strJobType;
    }
 
+   /**
+    * Update industry.
+    *
+    * @param jobId       The ID of the job to update.
+    * @param newIndustry The new industry ID for the job.
+    * @return The updated industry.
+    */
    public String updateIndustry(int jobId, int newIndustry) {
       String strIndustry = locationJobTypeIndustry.getIndustryMap().containsKey(newIndustry) ? locationJobTypeIndustry.getIndustryMap().get(newIndustry) : "Unknown";
       jobList.get(jobId).setIndustry(strIndustry);

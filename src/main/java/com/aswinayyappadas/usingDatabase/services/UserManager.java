@@ -1,3 +1,6 @@
+/**
+ * Service class for managing user-related operations, such as user registration and authentication.
+ */
 package com.aswinayyappadas.usingDatabase.services;
 
 import com.aswinayyappadas.usingDatabase.dbconnection.DbConnector;
@@ -9,15 +12,23 @@ import java.sql.*;
 
 public class UserManager {
     private final LogExceptions logExceptions;
-
+    /**
+     * Constructor for the UserManager class.
+     * Initializes the LogExceptions instance for logging.
+     */
     public UserManager() {
         this.logExceptions = new LogExceptions();
     }
-
-    private String hashPasswordWithSalt(String password, String salt) {
-        // Assuming you are using BCrypt for password hashing
-        return BCrypt.hashpw(password, salt);
-    }
+    /**
+     * Registers a new user in the system.
+     *
+     * @param username The username of the user.
+     * @param email    The email address of the user.
+     * @param password The password of the user.
+     * @param usertype The type of the user (e.g., role or privilege level).
+     * @return The generated user ID if registration is successful; otherwise, 0.
+     * @throws ExceptionHandler If an error occurs during user registration.
+     */
     public int registerUser(String username, String email, String password, int usertype) throws ExceptionHandler {
         // Check if the email already exists in the database
         if (isEmailExists(email)) {
@@ -62,7 +73,12 @@ public class UserManager {
             throw new ExceptionHandler("Error registering user.", e);
         }
     }
-
+    /**
+     * Checks if a given email address already exists in the user database.
+     *
+     * @param email The email address to check.
+     * @return True if the email already exists; otherwise, false.
+     */
     private boolean isEmailExists(String email) {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT COUNT(*) FROM tbl_user WHERE email = ?";
@@ -83,6 +99,14 @@ public class UserManager {
         }
         return false; // Default to false in case of an exception
     }
+
+    /**
+     * Authenticates a user by checking the entered email and password against the stored credentials.
+     *
+     * @param email    The email address of the user attempting to authenticate.
+     * @param password The password entered by the user.
+     * @return The user ID if authentication is successful; -1 if authentication fails or user not found.
+     */
     public int authenticateUserAndGetId(String email, String password) {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT id, password_hash, salt FROM tbl_user WHERE email = ?";
@@ -113,5 +137,16 @@ public class UserManager {
            logExceptions.logSQLExceptionDetails(e);
             return -1; // Error during authentication
         }
+    }
+    /**
+     * Hashes a password using BCrypt with the provided salt.
+     *
+     * @param password The password to be hashed.
+     * @param salt     The salt used in the password hashing process.
+     * @return The hashed password.
+     */
+    private String hashPasswordWithSalt(String password, String salt) {
+        // Assuming you are using BCrypt for password hashing
+        return BCrypt.hashpw(password, salt);
     }
 }

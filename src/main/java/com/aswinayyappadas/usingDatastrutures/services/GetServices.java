@@ -8,11 +8,17 @@ import com.aswinayyappadas.usingDatastrutures.user.UserData;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.HashSet;
-
+/**
+ * This class provides services for retrieving information related to users, jobs, and applications.
+ */
 public class GetServices implements UserData, JobListData, ApplicationsDataList {
 
-    // Get user type (Employer or Jobseeker) based on user ID
+    /**
+     * Get the user type (Employer or Job Seeker) based on the user ID.
+     *
+     * @param userId The ID of the user.
+     * @return The user type as a String ("Employer" or "Job Seeker").
+     */
     public String getUserTypeByUserId(int userId) {
         if (userData.get(userId) instanceof Employer) {
             return "Employer";
@@ -20,12 +26,22 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
         return "Job Seeker";
     }
 
-    // Get email by user ID
+    /**
+     * Get the email address associated with the user ID.
+     *
+     * @param userId The ID of the user.
+     * @return The email address of the user.
+     */
     public String getEmailByUserId(int userId) {
         return userData.get(userId).getEmail();
     }
 
-    // Get job posts by employer ID
+    /**
+     * Get job posts by an employer ID as a JSONArray.
+     *
+     * @param employerId The ID of the employer.
+     * @return A JSONArray containing job posts information.
+     */
     public JSONArray getJobPostsByEmployer(int employerId) {
         JSONArray jobPosts = new JSONArray();
         for (int jobId : employerJobList.get(employerId)) {
@@ -43,7 +59,12 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
         return jobPosts;
     }
 
-    // Get jobs by location
+    /**
+     * Get jobs based on location as a JSONArray.
+     *
+     * @param location The location to filter jobs.
+     * @return A JSONArray containing job posts information.
+     */
     public JSONArray getJobsByLocation(String location) {
         JSONArray jobPosts = new JSONArray();
         for (int jobId : jobList.keySet()) {
@@ -98,7 +119,12 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
         return jobPosts;
     }
 
-    // Get applied jobs by job seeker
+    /**
+     * Get the job posts applied by a job seeker.
+     *
+     * @param jobSeekerId The ID of the job seeker.
+     * @return A JSONArray containing applied job posts information.
+     */
     public JSONArray getAppliedJobsByJobSeeker(int jobSeekerId) {
         JSONArray jobPosts = new JSONArray();
         if (!jobseekerApplicationList.containsKey(jobSeekerId)) {
@@ -118,7 +144,13 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
         }
         return jobPosts;
     }
-
+    /**
+     * Get applications for a specific job posted by an employer.
+     *
+     * @param employerId The ID of the employer.
+     * @param jobId      The ID of the job.
+     * @return A JSONArray containing application details for the specified job.
+     */
     public JSONArray getApplicationsByJob(int employerId, int jobId) {
         JSONArray applicationsArray = new JSONArray();
 
@@ -148,7 +180,14 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
 
         return applicationsArray;
     }
-
+    /**
+     * Get jobs based on location, industry, and job type as a JSONArray.
+     *
+     * @param location The location to filter jobs.
+     * @param industry The industry to filter jobs.
+     * @param jobType  The job type to filter jobs.
+     * @return A JSONArray containing job posts information.
+     */
     public JSONArray getJobsByLocationIndustryType(String location, String industry, String jobType) {
         JSONArray jobPosts = new JSONArray();
         for(Job job : jobList.values()) {
@@ -168,6 +207,13 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
         return jobPosts;
     }
 
+    /**
+     * Get jobs based on location and industry as a JSONArray.
+     *
+     * @param location The location to filter jobs.
+     * @param industry The industry to filter jobs.
+     * @return A JSONArray containing job posts information.
+     */
     public JSONArray getJobsByLocationIndustry(String location, String industry) {
         JSONArray jobPosts = new JSONArray();
         for (Job job : jobList.values()) {
@@ -186,7 +232,12 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
         }
         return jobPosts;
     }
-
+    /**
+     * Get job posts based on job type as a JSONArray.
+     *
+     * @param jobType The job type to filter jobs.
+     * @return A JSONArray containing job posts information.
+     */
     public JSONArray getJobsByLocationType(String location, String jobType) {
         JSONArray jobPosts = new JSONArray();
         for (Job job : jobList.values()) {
@@ -205,7 +256,13 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
         }
         return jobPosts;
     }
-
+    /**
+     * Get jobs based on industry and job type as a JSONArray.
+     *
+     * @param industry The industry to filter jobs.
+     * @param jobType  The job type to filter jobs.
+     * @return A JSONArray containing job posts information.
+     */
     public JSONArray getJobsByIndustryType(String industry, String jobType) {
         JSONArray jobPosts = new JSONArray();
         for (Job job : jobList.values()) {
@@ -224,7 +281,12 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
         }
         return jobPosts;
     }
-
+    /**
+     * Get jobs based on industry as a JSONArray.
+     *
+     * @param industry The industry to filter jobs.
+     * @return A JSONArray containing job posts information.
+     */
     public JSONArray getJobsByIndustry(String industry) {
         JSONArray jobPosts = new JSONArray();
         for (Job job : jobList.values()) {
@@ -243,7 +305,12 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
         }
         return jobPosts;
     }
-
+    /**
+     * Get jobs based on job type as a JSONArray.
+     *
+     * @param jobType The job type to filter jobs.
+     * @return A JSONArray containing job posts information.
+     */
     public JSONArray getJobsByType(String jobType) {
         JSONArray jobPosts = new JSONArray();
         for (Job job : jobList.values()) {
@@ -262,7 +329,13 @@ public class GetServices implements UserData, JobListData, ApplicationsDataList 
         }
         return jobPosts;
     }
-
+    /**
+     * Get a specific job post by employer and job ID.
+     *
+     * @param userId The ID of the user (employer).
+     * @param jobId  The ID of the job.
+     * @return A JSONObject containing job post information or null if not found.
+     */
     public JSONObject getJobPostsByEmployer(int userId, int jobId) {
         // Check if the employer has posted the specified job
         if (employerJobList.containsKey(userId) && employerJobList.get(userId).contains(jobId)

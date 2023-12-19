@@ -32,20 +32,32 @@ public class UserAuthenticationServlet extends HttpServlet {
     private final UserInputValidator userInputValidator;
     private final Key key;
     private static String secretKeyString = "QXjflyMNegfMTCT_iuSd0VAJ2VJoPYKkI3mw7-qyaB8";
-
+    /**
+     * Getter for the secretKeyString.
+     *
+     * @return The secret key string used for JWT token generation.
+     */
     public static String getSecretKeyString() {
         return secretKeyString;
     }
 
-
-
+    /**
+     * Constructor for the UserAuthenticationServlet class.
+     * Initializes UserManager, GetServices, UserInputValidator, and the JWT key.
+     */
     public UserAuthenticationServlet() {
         this.userManager = new UserManager();
         this.getServices = new GetServices();
         this.userInputValidator = new UserInputValidator();
         this.key = Keys.hmacShaKeyFor(Base64.getUrlDecoder().decode(secretKeyString));
     }
-
+    /**
+     * Handles HTTP POST requests for user authentication.
+     *
+     * @param request  The HttpServletRequest object.
+     * @param response The HttpServletResponse object.
+     * @throws IOException If an I/O error occurs.
+     */
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         StringBuilder jsonBody = new StringBuilder();
         try (BufferedReader reader = request.getReader()) {
@@ -88,7 +100,14 @@ public class UserAuthenticationServlet extends HttpServlet {
             sendErrorResponse(response, "Invalid username or password", HttpServletResponse.SC_UNAUTHORIZED);
         }
     }
-
+    /**
+     * Sends an error response with the specified message and status code.
+     *
+     * @param response    The HttpServletResponse object.
+     * @param message     The error message.
+     * @param statusCode  The HTTP status code for the error response.
+     * @throws IOException If an I/O error occurs.
+     */
     private void sendErrorResponse(HttpServletResponse response, Object message, int statusCode) throws IOException {
         response.setStatus(statusCode);
         JSONObject errorResponse = new JSONObject();
@@ -96,7 +115,12 @@ public class UserAuthenticationServlet extends HttpServlet {
         errorResponse.put("message", message);
         response.getWriter().println(errorResponse.toString());
     }
-
+    /**
+     * Validates the input data received in the JSON format.
+     *
+     * @param jsonData The JSONObject containing input data.
+     * @return A JSONObject containing validation errors, if any.
+     */
     private JSONObject validateInput(JSONObject jsonData) {
         JSONObject validationErrors = new JSONObject();
 
@@ -109,7 +133,13 @@ public class UserAuthenticationServlet extends HttpServlet {
 
         return validationErrors;
     }
-
+    /**
+     * Generates a JWT token for the given email and user ID.
+     *
+     * @param email  The user's email address.
+     * @param userId The user ID.
+     * @return The generated JWT token.
+     */
     String generateJwtToken(String email, int userId) {
         return Jwts.builder()
                 .setSubject(email)

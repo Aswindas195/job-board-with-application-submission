@@ -1,3 +1,9 @@
+/**
+ * This class provides various methods to retrieve information related to job posts and applications.
+ * It includes methods to get job posts by employer, user type by user ID, applied jobs by job seeker,
+ * all jobs from listings, jobs by location, applications by job, and jobs by different combinations of
+ * location, industry, and job type.
+ */
 package com.aswinayyappadas.usingDatabase.services;
 
 import com.aswinayyappadas.usingDatabase.dbconnection.DbConnector;
@@ -11,6 +17,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class GetServices {
+    /**
+     * Retrieves a JSON array of job posts for a specific employer.
+     *
+     * @param employerId The ID of the employer.
+     * @return A JSON array containing job posts for the specified employer.
+     * @throws ExceptionHandler If an error occurs during the retrieval process.
+     */
     public JSONArray getJobPostsByEmployer(int employerId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT id, title, industry, job_type, description, requirements, location FROM tbl_job_post WHERE employer_id = ?";
@@ -50,7 +63,12 @@ public class GetServices {
             throw new ExceptionHandler("Error retrieving job posts by employer ID.", e);
         }
     }
-
+    /**
+     * Retrieves the user type based on the given user ID.
+     *
+     * @param userId The ID of the user.
+     * @return The user type associated with the given user ID.
+     */
     public String getUserTypeByUserId(int userId) {
         // This assumes you have a database connection. Replace "yourDatabaseConnection" with your actual database connection.
         try (Connection connection = DbConnector.getConnection()) {
@@ -69,6 +87,13 @@ public class GetServices {
 
         return null; // Return null if user type is not found
     }
+    /**
+     * Retrieves a JSON array of jobs that a job seeker has applied for.
+     *
+     * @param jobSeekerId The ID of the job seeker.
+     * @return A JSON array containing job information for the applied jobs.
+     * @throws ExceptionHandler If an error occurs during the retrieval process.
+     */
     public JSONArray getAppliedJobsByJobSeeker(int jobSeekerId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT j.id, j.title, j.description, j.requirements, j.location, j.industry, j.job_type, a.date, a.cover_letter, a.resume_file_path " +
@@ -117,6 +142,12 @@ public class GetServices {
             throw new ExceptionHandler("Error retrieving applied jobs by job seeker ID.", e);
         }
     }
+    /**
+     * Retrieves a JSON array of all jobs from listings.
+     *
+     * @return A JSON array containing information about all job listings.
+     * @throws SQLException If an SQL error occurs during the retrieval process.
+     */
     public JSONArray getAllJobsFromListings() throws SQLException {
         JSONArray jobListingsArray = new JSONArray();
 
@@ -151,6 +182,14 @@ public class GetServices {
 
         return jobListingsArray;
     }
+
+    /**
+     * Retrieves a JSON array of jobs based on the specified location.
+     *
+     * @param location The location to filter the jobs by.
+     * @return A JSON array containing job information for the specified location.
+     * @throws ExceptionHandler If an error occurs during the retrieval process.
+     */
     public JSONArray getJobsByLocation(String location) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post WHERE location = ?";
@@ -188,7 +227,14 @@ public class GetServices {
             throw new ExceptionHandler("Error retrieving job listings by location.", e);
         }
     }
-
+    /**
+     * Retrieves a JSON array of applications for a specific job and employer.
+     *
+     * @param employerId The ID of the employer.
+     * @param jobId      The ID of the job.
+     * @return A JSON array containing information about applications for the specified job and employer.
+     * @throws ExceptionHandler If an error occurs during the retrieval process.
+     */
     public JSONArray getApplicationsByJob(int employerId, int jobId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             // Assuming you have a table named applications, adjust the SQL query accordingly
@@ -233,7 +279,15 @@ public class GetServices {
             throw new ExceptionHandler("Error retrieving applications by job ID and employer ID.", e);
         }
     }
-
+    /**
+     * Retrieves a JSON array of jobs based on location, industry, and job type.
+     *
+     * @param location The location to filter the jobs by.
+     * @param industry The industry to filter the jobs by.
+     * @param jobType  The job type to filter the jobs by.
+     * @return A JSON array containing job information for the specified location, industry, and job type.
+     * @throws ExceptionHandler If an error occurs during the retrieval process.
+     */
     public JSONArray getJobsByLocationIndustryType(String location, String industry, String jobType) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post " +
@@ -275,7 +329,14 @@ public class GetServices {
             throw new ExceptionHandler("Error retrieving job listings by location, industry, and job type.", e);
         }
     }
-
+    /**
+     * Retrieves a JSON array of jobs based on the specified location and industry.
+     *
+     * @param location The location to filter the jobs by.
+     * @param industry The industry to filter the jobs by.
+     * @return A JSON array containing job information for the specified location and industry.
+     * @throws ExceptionHandler If an error occurs during the retrieval process.
+     */
     public JSONArray getJobsByLocationIndustry(String location, String industry) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post " +
@@ -316,7 +377,14 @@ public class GetServices {
             throw new ExceptionHandler("Error retrieving job listings by location and industry.", e);
         }
     }
-
+    /**
+     * Retrieves a JSON array of jobs based on the specified location and job type.
+     *
+     * @param location The location to filter the jobs by.
+     * @param jobType  The job type to filter the jobs by.
+     * @return A JSON array containing job information for the specified location and job type.
+     * @throws ExceptionHandler If an error occurs during the retrieval process.
+     */
     public JSONArray getJobsByLocationType(String location, String jobType) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post " +
@@ -357,7 +425,14 @@ public class GetServices {
             throw new ExceptionHandler("Error retrieving job listings by location and job type.", e);
         }
     }
-
+    /**
+     * Retrieves a JSON array of jobs based on the specified industry and job type.
+     *
+     * @param industry The industry to filter the jobs by.
+     * @param jobType  The job type to filter the jobs by.
+     * @return A JSON array containing job information for the specified industry and job type.
+     * @throws ExceptionHandler If an error occurs during the retrieval process.
+     */
     public JSONArray getJobsByIndustryType(String industry, String jobType) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post " +
@@ -398,7 +473,13 @@ public class GetServices {
             throw new ExceptionHandler("Error retrieving job listings by industry and job type.", e);
         }
     }
-
+    /**
+     * Retrieves a JSON array of jobs based on the specified industry.
+     *
+     * @param industry The industry to filter the jobs by.
+     * @return A JSON array containing job information for the specified industry.
+     * @throws ExceptionHandler If an error occurs during the retrieval process.
+     */
     public JSONArray getJobsByIndustry(String industry) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post " +
@@ -438,7 +519,13 @@ public class GetServices {
             throw new ExceptionHandler("Error retrieving job listings by industry.", e);
         }
     }
-
+    /**
+     * Retrieves a JSON array of jobs based on the specified job type.
+     *
+     * @param jobType The job type to filter the jobs by.
+     * @return A JSON array containing job information for the specified job type.
+     * @throws ExceptionHandler If an error occurs during the retrieval process.
+     */
     public JSONArray getJobsByType(String jobType) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT id, industry, job_type, title, description, requirements, location FROM tbl_job_post " +
@@ -478,7 +565,14 @@ public class GetServices {
             throw new ExceptionHandler("Error retrieving job listings by job type.", e);
         }
     }
-
+    /**
+     * Retrieves a JSON array of job posts for a specific employer and job ID.
+     *
+     * @param employerId The ID of the employer.
+     * @param jobId      The ID of the job.
+     * @return A JSON object containing information about the specified job post.
+     * @throws ExceptionHandler If an error occurs during the retrieval process.
+     */
     public JSONObject getJobPostsByEmployer(int employerId, int jobId) throws ExceptionHandler {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT id, title, industry, job_type, description, requirements, location FROM tbl_job_post WHERE employer_id = ? AND id = ?";

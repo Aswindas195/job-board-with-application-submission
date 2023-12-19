@@ -1,3 +1,6 @@
+/**
+ * Service class for performing validity checks related to employers, job seekers, and job IDs.
+ */
 package com.aswinayyappadas.usingDatabase.services;
 
 import com.aswinayyappadas.usingDatabase.dbconnection.DbConnector;
@@ -10,10 +13,19 @@ import java.sql.SQLException;
 
 public class ValidityCheckingService {
     private final LogExceptions logExceptions;
-
+    /**
+     * Constructor for the ValidityCheckingService class.
+     * Initializes the LogExceptions instance for logging.
+     */
     public ValidityCheckingService() {
         this.logExceptions = new LogExceptions();
     }
+    /**
+     * Checks if the provided employer ID corresponds to a valid employer user.
+     *
+     * @param employerId The ID of the employer to be validated.
+     * @return True if the employer ID is valid; otherwise, false.
+     */
     public boolean isValidEmployerId(int employerId) {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT user_type FROM tbl_user WHERE Id = ?";
@@ -35,6 +47,13 @@ public class ValidityCheckingService {
             return false; // Error during validation
         }
     }
+
+    /**
+     * Checks if the provided job seeker ID corresponds to a valid job seeker user.
+     *
+     * @param jobSeekerId The ID of the job seeker to be validated.
+     * @return True if the job seeker ID is valid; otherwise, false.
+     */
     public boolean isValidJobSeekerId(int jobSeekerId) {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT user_type FROM tbl_user WHERE id = ?";
@@ -56,6 +75,12 @@ public class ValidityCheckingService {
             return false; // Error during validation
         }
     }
+    /**
+     * Checks if the provided job ID corresponds to a valid job posting.
+     *
+     * @param jobId The ID of the job to be validated.
+     * @return True if the job ID is valid; otherwise, false.
+     */
     public boolean isValidJobId(int jobId) {
         try (Connection connection = DbConnector.getConnection()) {
             String sql = "SELECT COUNT(*) FROM tbl_job_post WHERE id = ?";
